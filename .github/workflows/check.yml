@@ -19,4 +19,6 @@ jobs:
       - name: Security invariants
         run: |
           node tests/invariants.mjs
-          node --test tests/research-pack.test.mjs
+          node --test tests/research-pack.test.mjs tests/discovery.test.mjs
+          node --check scripts/discover-prospects.mjs
+          node --check scripts/stage-research-pack.mjs
