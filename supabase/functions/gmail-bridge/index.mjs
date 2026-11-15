@@ -173,8 +173,17 @@ async function reviewReplies(user,body){
     ]);
     const sentThreads=new Set((outbound.messages||[]).map(m=>m.threadId).filter(Boolean));
     const matches=(inbound.messages||[]).filter(m=>sentThreads.has(m.threadId));
+    const sentDateByThread=new Map();
     const candidates=[];
     for(const msg of matches.slice(0,5)){
+      if(!sentDateByThread.has(msg.threadId)){
+        const originals=(outbound.messages||[]).filter(m=>m.threadId===msg.threadId).slice(0,6);
+        const dates=await Promise.all(originals.map(async m=>{
+          const sent=await gmailGet(token,"messages/"+encodeURIComponent(m.id)+"?format=metadata&metadataHeaders=To");
+          return (sent.labelIds||[]).includes("SENT")?Number(sent.internalDate||0):0;
+        }));
+        sentDateByThread.set(msg.threadId,Math.min(...dates.filter(n=>Number.isFinite(n)&&n>0),Infinity));
+      }
       const query="messages/"+encodeURIComponent(msg.id)+"?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Date&metadataHeaders=Subject&metadataHeaders=Auto-Submitted&metadataHeaders=Precedence";
       const meta=await gmailGet(token,query);
       const headers=Object.fromEntries((meta.payload?.headers||[]).map(h=>[h.name.toLowerCase(),h.value]));
@@ -186,7 +195,8 @@ async function reviewReplies(user,body){
       const precedence=String(headers.precedence||"").toLowerCase();
       if((automatic&&automatic!=="no")||["bulk","list","junk"].includes(precedence))continue;
       const arrived=Number(meta.internalDate||0);
-      if(!Number.isFinite(arrived)||arrived<Date.parse(r.sentAt)-86400000)continue;
+      const actualSentAt=sentDateByThread.get(msg.threadId);
+      if(!Number.isFinite(arrived)||!Number.isFinite(actualSentAt)||arrived<=actualSentAt)continue;
       candidates.push({messageId:meta.id,threadId:meta.threadId,from:email,subject:String(headers.subject||"").slice(0,200),receivedAt:new Date(arrived).toISOString()});
     }
     reviewed.push({recordId:r.id,email,matched:candidates,uncheckedInbound:(inbound.messages||[]).length-matches.length,outboundFound:sentThreads.size>0,truncated:!!(outbound.nextPageToken||inbound.nextPageToken)});
