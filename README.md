@@ -1,6 +1,6 @@
-# LeviOS Outreach · v0.2 (cloud integration foundation)
+# LeviOS Outreach · v0.3 (Strategy Lab + Gmail reply review)
 
-A working encrypted, offline-first outreach command-center app. Its original browser-local mode still works independently; the newly committed **opt-in Supabase cloud synchronization and Gmail bridge require a Supabase project, SQL migration, Google OAuth setup, and server credentials before they become operational**.
+A working encrypted, offline-first outreach command-center app. Its original browser-local mode still works independently; the opt-in Supabase cloud synchronization and Gmail bridge are configured for the owner. A separate Google OAuth authorization is still required on each new authorization cycle.
 
 ## Features currently usable without external services
 
@@ -18,7 +18,15 @@ A working encrypted, offline-first outreach command-center app. Its original bro
 - Password is never stored; key remains only in memory; idle auto-lock after 20 minutes
 - Encrypted JSON backup/restore; unencrypted CSV export (with warning); CSV/JSON import with validation and duplicate checks
 
-## Cloud + Gmail integration (requires setup)
+## Strategy Lab
+
+The **Strategy Lab** stores eight editable outreach hypotheses and allows new custom experiments. Assign an experiment and A/B variant on each opportunity before sending. Human replies, positive replies, meeting stages, and industry performance are calculated from confirmed sends and reviewed outcomes, not open pixels. The assignment, sent subject, word count and CC count are snapshotted at the time of manual send confirmation so later edits do not rewrite history.
+
+**Insights → Scan Gmail for replies** reviews only messages sharing a Gmail thread with actual sent email to the target prospect and checks chronology. It fetches metadata, never message bodies, and presents candidates for human classification. Your decision determines positive, neutral, negative, opt-out, or automated status; no campaign messages are ever sent by the bridge. Email drafts may include up to 3 verified, transparent CC stakeholders.
+
+See [Strategy Lab playbook](docs/STRATEGY_LAB.md) for experiment design, measurement definitions, deliverability and truthful identity requirements.
+
+## Cloud + Gmail integration
 
 New code: `cloud.js`, `supabase/migrations/20261115000000_outreach_cloud.sql`, `supabase/functions/gmail-bridge/index.mjs`, and `.github/workflows/check.yml`.
 
@@ -32,8 +40,8 @@ Features are opt-in and stay disabled until the cloud is configured. Clicking **
 - Supabase project: **created** (`yfqtyuynsumvwhnmnswk`, initial project cost quoted $0/month)
 - Database migration: **applied**; RLS verified on all three tables
 - Public Supabase project URL and publishable key: **preconfigured** in `cloud.js`
-- Cloud login and synchronization: **awaiting Supabase Auth redirect URL and user magic-link verification**
-- Gmail Edge Function: **deployed**; Gmail authorization/draft creation awaits Google OAuth credentials and server-side secrets
+- Cloud login: **verified**; encrypted vault revision uploaded and read back
+- Gmail Edge Function: **deployed**; Gmail OAuth and one self-addressed draft verified, draft record confirmed in database
 - Cross-device merge: not supported; conflicting revisions stop rather than overwrite
 
 ## Run locally
@@ -52,30 +60,30 @@ This is the source repository `LeviMunk/levios-outreach`. The app is served from
 
 This repository contains only application source code. Never commit private prospect records, exported CSV/JSON data, API tokens, or Gmail credentials.
 
-**Security limitation:** anyone can download the publicly hosted *application code*, but no private records are part of that code. All entered data is encrypted in browser storage. Because the app is a static public site, this is **not a remote authenticated, cross-device production CRM**; it does not authenticate access to a cloud database. Use a dedicated server-side auth and storage provider before adding cloud synchronization or Gmail credentials.
+**Security limitation:** anyone can download the publicly hosted *application code*, but no private records are part of that code. All entered data is encrypted in browser storage. The public static site contains no privileged secrets. Owner-only authenticated Supabase synchronization stores encrypted payloads; Gmail refresh tokens are sealed by a server-side secret. This remains a single-user prototype, not a production multi-tenant CRM.
 
 ## Vault and backups
 
 - Use a long, unique passphrase (12 characters minimum). You need it each time you unlock the app.
-- Data stays on the browser/device where created. It is **not synchronized** to other devices.
+- Data remains encrypted locally. When opted in, ciphertext snapshots synchronize through authenticated Supabase with revision-conflict protection. Multi-device merge is not implemented.
 - Download encrypted backups after significant changes. Clearing browser data, changing profiles or losing the device without a backup loses your data.
 - An encrypted backup can be imported on another device, then unlocked with the original passphrase. This **replaces**, not merges, the local vault.
 - CSV export is intentionally marked as unencrypted. Protect exported CSV files appropriately.
 - A strong passphrase mitigates offline guessing; a compromised browser, malicious extension, or injected script could still read decrypted data while the app is unlocked.
-- The app imports JSON prospect arrays and simple CSVs. Optional encrypted cloud synchronization and a Gmail bridge have been implemented in source, but are not active until provider setup. A direct ChatGPT AI backend does not exist yet.
+- The app imports JSON prospect arrays and simple CSVs. Optional encrypted cloud synchronization and Gmail drafting are operational for the owner, with manual authorization and no sending capability. A direct ChatGPT AI backend does not exist yet.
 
-## Future milestones after cloud setup
+## Next improvements
 
-1. Complete Supabase project setup, authorized email sign-in, apply the SQL migration, and verify two-device encrypted sync and conflict handling.
-2. Deploy the Gmail Edge Function using Google OAuth credentials; verify draft creation and read-only metadata retrieval.
-3. Implement reviewed Gmail thread matching, confirmed-send and reply reconciliation, follow-up suppression, and consented notifications.
+1. Verify a real sent-and-replied conversation in the read-only Gmail reply-review flow (metadata and matching sent-thread required; never auto-record human sentiment).
+2. Verify two-device encrypted sync and conflict handling, and improve merge UX.
+3. Expand bounce and suppression analytics, with optional consented reporting and notifications.
 4. Implement a schema-validated AI ingestion endpoint, with human approval, idempotency, and source attribution.
 5. Add import adapters to `LeviMunk/levios-career`, preserving its source and any real existing data. Its current README specifies no authentication, so do not expose it to the internet.
 6. Add automated tests beyond the static smoke checks and support safe deployments.
 
 ## Data model (prototype)
 
-Each record has `id`, `name`, `type`, `industry`, `location`, `person`, `channel`, `email`, `profile`, `website`, `stage`, `followup`, `concept`, `angle`, `subject`, `draft`, `notes`, `createdAt`, and `updatedAt`. Activities have `id`, `recordId`, `kind`, `summary`, `snapshot`, and `at`.
+Each record has `id`, `name`, `type`, `industry`, `location`, `person`, `channel`, `email`, `profile`, `website`, `stage`, `followup`, `concept`, `angle`, `subject`, `draft`, `notes`, `cc`, `strategyId`, `variant`, `createdAt`, and `updatedAt`. Activities have `id`, `recordId`, `kind`, `summary`, `snapshot`, `meta`, and `at`. Strategy library objects live in the same encrypted vault.
 
 The next phase should normalize organizations, contacts, opportunities, messages, conversations, tasks, and provenance into a database instead of treating this browser-local structure as a permanent schema.
 
