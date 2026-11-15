@@ -225,6 +225,8 @@
     onLocalWrite(){if(linked&&user)schedule()},
     onVaultOpen(){refreshUI()},onLock(){refreshUI()},
     async createDraft(rec){return createDraft(rec)},
+    async reviewReplies(records){if(!gmailConnected)throw Error("Connect Gmail first.");return gmail("reviewReplies",{records});},
+    isGmailConnected(){return gmailConnected},
     isConnected(){return !!(linked&&user)}
   };
   start().catch(e=>status("Error: "+e.message));
