@@ -1,10 +1,11 @@
 name: LeviOS Outreach weekly prospect research
 on:
   schedule:
-    - cron: '17 14 * * 1' # Monday 08:17 CST / 09:17 CDT (GitHub schedules are UTC)
+    - cron: '17 14 * * 1' # Monday 08:17 CST / 09:17 CDT (UTC schedule)
   workflow_dispatch:
 permissions:
   contents: read
+  id-token: write
 concurrency:
   group: levios-research
   cancel-in-progress: false
@@ -21,12 +22,12 @@ jobs:
         run: node scripts/discover-prospects.mjs
       - name: Validate research pack
         run: node scripts/validate-research-pack.mjs research-output/candidates.json
-      - name: Stage unique candidates in encrypted vault's owner-only Research Inbox
+      - name: Stage using verified short-lived GitHub OIDC token
         env:
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          OUTREACH_OWNER_USER_ID: ${{ secrets.OUTREACH_OWNER_USER_ID }}
-        run: node scripts/stage-research-pack.mjs
-      - name: Upload research and review report
+          INTAKE_URL: https://yfqtyuynsumvwhnmnswk.supabase.co/functions/v1/outreach-research-intake
+        run: |
+          node scripts/submit-oidc-research.mjs
+      - name: Upload research report
         if: always()
         uses: actions/upload-artifact@v4
         with:
