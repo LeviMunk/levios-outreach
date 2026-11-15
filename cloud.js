@@ -32,6 +32,7 @@
     $("cloud-upload").textContent=remote?"Replace cloud with THIS browser vault":"Upload browser vault and enable sync";
     $("gmail-authorize").disabled=!user||!gmailReady;
     $("gmail-activity").disabled=!user||!gmailConnected;
+    $("gmail-test").disabled=!user||!gmailConnected||!window.LeviOutreachIsUnlocked?.();
     status(message);
   }
   function initUI(){
@@ -59,7 +60,9 @@
       '<div class="actions" style="display:flex;flex-wrap:wrap;gap:8px">',
       '<button class="button button-secondary" id="gmail-status">Check connection</button>',
       '<button class="button button-primary" id="gmail-authorize">Connect Gmail</button>',
-      '<button class="button button-secondary" id="gmail-activity">Inspect tracked email activity</button></div>',
+      '<button class="button button-secondary" id="gmail-activity">Inspect tracked email activity</button>',
+      '<button class="button button-secondary" id="gmail-test">Create test prospect + Gmail draft</button></div>',
+      '<p class="small subtle">Safe integration test: adds a clearly labeled sample to your encrypted vault and creates a Gmail draft addressed to yourself. Nothing is sent.</p>',
       '<pre id="gmail-results" class="small" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></div>',
       '<p id="cloud-status" role="status" aria-live="polite" class="small"></p>',
       '</dialog>'
@@ -153,7 +156,7 @@
   }
   async function click(e){
     const button=e.target.closest("button");const id=button?.id;
-    if(!["cloud-open","cloud-before-unlock","cloud-close","cloud-configure","cloud-login","cloud-upload","cloud-restore","cloud-refresh","cloud-logout","gmail-status","gmail-authorize","gmail-activity"].includes(id))return;
+    if(!["cloud-open","cloud-before-unlock","cloud-close","cloud-configure","cloud-login","cloud-upload","cloud-restore","cloud-refresh","cloud-logout","gmail-status","gmail-authorize","gmail-activity","gmail-test"].includes(id))return;
     if(id==="cloud-open"||id==="cloud-before-unlock"){$("cloud-modal").showModal();refreshUI();if(user)checkGmail().catch(err=>status("Error checking Gmail: "+err.message));return}
     if(id==="cloud-close"){$("cloud-modal").close();return}
     if(button.disabled)return;
@@ -174,6 +177,14 @@
       else if(id==="cloud-logout"){await client.auth.signOut();user=null;remote=null;linked=false;gmailReady=false;gmailConnected=false;localStorage.removeItem(LINK);status("Signed out. Local vault unchanged.")}
       else if(id==="gmail-status"){await checkGmail();}
       else if(id==="gmail-authorize"){if(!gmailReady)throw Error("Google OAuth is not configured yet. Follow the Google OAuth setup link.");const r=await gmail("authorize");if(!r.authorizeUrl)throw Error("Google authorization unavailable");location.assign(r.authorizeUrl);}
+      else if(id==="gmail-test"){
+        if(!gmailConnected)throw Error('Connect Gmail first.');
+        if(!window.LeviOutreachCreateTestProspect)throw Error('Test helper unavailable. Refresh the page.');
+        const prospect=await window.LeviOutreachCreateTestProspect();
+        const result=await createDraft(prospect);
+        $("gmail-results").textContent="SUCCESS: Test prospect saved in your encrypted vault. Gmail draft created for levivanstap@gmail.com. No email sent."+(result.existing?" (Existing draft reused.)":"");
+        status("Gmail draft test completed. Close this panel to find the prospect in Outreach Queue, or open Gmail Drafts.");
+      }
       else if(id==="gmail-activity"){
         const emails=(window.LeviOutreachTrackedEmails?.()||[]).slice(0,10);
         if(!emails.length)throw Error("No email prospects in unlocked vault");
