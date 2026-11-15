@@ -3,11 +3,13 @@
   "use strict";
   const CFG="levios.outreach.cloud.config.v1", LINK="levios.outreach.cloud.link.v1", VAULT="levios.outreach.encrypted.v1";
   const OWNER="levivanstap@gmail.com";
+  // Public Supabase project URL/key: safe to distribute, never a privileged credential.
+  const DEFAULT_CONFIG={url:"https://yfqtyuynsumvwhnmnswk.supabase.co",key:"sb_publishable_-l-qx8tIGXMvcQc9pcBq0w_nB2dEFQm"};
   let client=null, user=null, remote=null, revision=0, linked=false, saving=false, pending=false, timer=0, message="";
   const $=id=>document.getElementById(id);
   const vault=()=>{try{return JSON.parse(localStorage.getItem(VAULT)||"null")}catch{return null}};
   const valid=v=>!!(v&&v.version===1&&v.salt&&v.iv&&v.ciphertext);
-  const config=()=>{try{return JSON.parse(localStorage.getItem(CFG)||"null")}catch{return null}};
+  const config=()=>{try{return JSON.parse(localStorage.getItem(CFG)||"null")||DEFAULT_CONFIG}catch{return DEFAULT_CONFIG}};
   function makeClient(c){
     if(!window.supabase?.createClient)throw Error("Supabase script unavailable. Try reloading.");
     if(!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(c.url||""))throw Error("Invalid Supabase URL");
@@ -136,7 +138,7 @@
       if(id==="cloud-configure"){
         const c={url:$("cloud-url").value.trim(),key:$("cloud-key").value.trim()};makeClient(c);localStorage.setItem(CFG,JSON.stringify(c));await start();status("Configuration saved. Sign in using your email.");
       }else if(id==="cloud-login"){
-        const {error}=await client.auth.signInWithOtp({email:OWNER,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:false}});
+        const {error}=await client.auth.signInWithOtp({email:OWNER,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:true}});
         if(error)throw Error(error.message);
         status("Sign-in link requested. Check "+OWNER);
       }else if(id==="cloud-upload"){
