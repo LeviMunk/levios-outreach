@@ -1,0 +1,18 @@
+import {readFileSync,writeFileSync} from 'node:fs';
+const requestURL=process.env.ACTIONS_ID_TOKEN_REQUEST_URL;
+const requestToken=process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN;
+const intake=process.env.INTAKE_URL;
+if(!requestURL||!requestToken||!intake)throw Error('GitHub OIDC context or intake endpoint is missing');
+const url=new URL(requestURL);
+url.searchParams.set('audience','levios-outreach-research');
+const tokenResponse=await fetch(url,{headers:{Authorization:'Bearer '+requestToken,'Accept':'application/json'},signal:AbortSignal.timeout(15000)});
+if(!tokenResponse.ok)throw Error('GitHub OIDC token issuance failed: '+tokenResponse.status);
+const token=(await tokenResponse.json()).value;
+if(typeof token!=='string'||!token)throw Error('GitHub did not provide an OIDC token');
+const pack=JSON.parse(readFileSync('research-output/candidates.json','utf8'));
+const body=JSON.stringify({records:pack.records.slice(0,12),strategies:[]});
+const response=await fetch(intake,{method:'POST',headers:{Authorization:'Bearer '+token,'content-type':'application/json'},body,signal:AbortSignal.timeout(30000)});
+if(!response.ok)throw Error('Authenticated research intake returned '+response.status);
+const result=await response.json();
+writeFileSync('research-output/report.json',JSON.stringify({...result,source:'OpenStreetMap directory; confirm each lead before outreach'},null,2));
+console.log(`Research inbox: ${result.staged} staged, ${result.skipped} skipped. No outbound messages.`);
