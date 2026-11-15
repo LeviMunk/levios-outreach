@@ -20,7 +20,7 @@ assert.match(sql,/enable row level security/);
 assert.match(sql,/where user_id = auth\.uid\(\) and revision = p_expected_revision/);
 assert.match(gmail,/auth\.getUser\(jwt\)/);
 assert.match(gmail,/gmail\.compose/);
-assert.match(gmail,/gmail\\.readonly/);
+assert.match(gmail,/gmail\.readonly/);
 assert.match(gmail,/matchedThreadOnly:true/);
 assert.match(gmail,/arrived<=actualSentAt/);
 assert.match(gmail,/autoUpdated:false/);
