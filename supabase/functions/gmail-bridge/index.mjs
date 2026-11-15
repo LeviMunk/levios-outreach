@@ -171,7 +171,24 @@ Deno.serve(async req=>{
   if(req.method==="OPTIONS")return new Response(null,{status:204,headers:cors});
   if(req.method==="GET"){
     try{return await callback(new URL(req.url));}
-    catch(e){const dest=new URL(appUrl);dest.searchParams.set("gmail","error");return Response.redirect(dest,303);}
+    catch(e){
+      const message=String(e?.message||"");
+      const code=/Google token exchange failed: invalid_client/i.test(message)?"invalid_client"
+        :/Google token exchange failed: invalid_grant/i.test(message)?"invalid_grant"
+        :/Google token exchange failed/i.test(message)?"token_exchange"
+        :/Gmail read failed/i.test(message)?"gmail_api"
+        :/Incorrect Gmail account/i.test(message)?"wrong_account"
+        :/OAuth state|OAuth code missing/i.test(message)?"oauth_state"
+        :/refresh token/i.test(message)?"refresh_token"
+        :/encryption key|encrypt|AES-GCM/i.test(message)?"encryption"
+        :/Supabase service credential|permission denied|duplicate key|relation.*outreach_gmail/i.test(message)?"database"
+        :"callback_failed";
+      console.error("Gmail OAuth callback failed, category:",code);
+      const dest=new URL(appUrl);
+      dest.searchParams.set("gmail","error");
+      dest.searchParams.set("gmail_error",code);
+      return Response.redirect(dest,303);
+    }
   }
   if(req.method!=="POST")return json({error:"Method not allowed"},405);
   if(req.headers.get("origin")!==allowedOrigin)return json({error:"Origin not allowed"},403);
