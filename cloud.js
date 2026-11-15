@@ -6,6 +6,7 @@
   // Public Supabase project URL/key: safe to distribute, never a privileged credential.
   const DEFAULT_CONFIG={url:"https://yfqtyuynsumvwhnmnswk.supabase.co",key:"sb_publishable_-l-qx8tIGXMvcQc9pcBq0w_nB2dEFQm"};
   let client=null, user=null, remote=null, revision=0, linked=false, saving=false, pending=false, timer=0, message="";
+  let gmailReady=false, gmailConnected=false;
   const $=id=>document.getElementById(id);
   const vault=()=>{try{return JSON.parse(localStorage.getItem(VAULT)||"null")}catch{return null}};
   const valid=v=>!!(v&&v.version===1&&v.salt&&v.iv&&v.ciphertext);
@@ -29,6 +30,8 @@
     $("cloud-upload").disabled=!user||!valid(vault());
     $("cloud-restore").disabled=!user||!remote;
     $("cloud-upload").textContent=remote?"Replace cloud with THIS browser vault":"Upload browser vault and enable sync";
+    $("gmail-authorize").disabled=!user||!gmailReady;
+    $("gmail-activity").disabled=!user||!gmailConnected;
     status(message);
   }
   function initUI(){
@@ -51,7 +54,8 @@
       '<button class="button button-secondary" id="cloud-logout">Sign out</button></div>',
       '<p class="small subtle">Conflicting edits never overwrite automatically. Export an encrypted backup before replacing a vault. Use one device at a time until merge support is available.</p>',
       '<hr style="opacity:.25;margin:20px 0"><h3>Gmail</h3>',
-      '<p class="small subtle">Requires a deployed Gmail bridge and Google OAuth setup. Never sends messages automatically.</p>',
+      '<p class="small subtle">Gmail requires separate Google OAuth credentials and account authorization. No emails are sent automatically.</p>',
+      '<p class="small"><a href="https://github.com/LeviMunk/levios-outreach/blob/main/docs/CLOUD_SETUP.md" target="_blank" rel="noopener noreferrer">Google OAuth setup instructions ↗</a></p>',
       '<div class="actions" style="display:flex;flex-wrap:wrap;gap:8px">',
       '<button class="button button-secondary" id="gmail-status">Check connection</button>',
       '<button class="button button-primary" id="gmail-authorize">Connect Gmail</button>',
@@ -117,8 +121,24 @@
   async function gmail(action, extra={}){
     if(!client||!user)throw Error("Connect cloud first");
     const {data,error}=await client.functions.invoke("gmail-bridge",{body:{action,...extra}});
-    if(error)throw Error(error.message);
+    if(error){
+      let detail=error.message;
+      try{const response=error.context?.clone?.()||error.context;if(response?.json){const body=await response.json();detail=body?.error||body?.message||detail;}}catch{}
+      throw Error(detail);
+    }
     if(data?.error)throw Error(data.error);
+    return data;
+  }
+  async function checkGmail(){
+    const data=await gmail("status");
+    gmailReady=data.authorizationReady===true;
+    gmailConnected=data.connected===true;
+    $("gmail-results").textContent=gmailConnected
+      ? "Gmail is connected: "+(data.address||"authorized account")
+      : gmailReady
+        ? "Google OAuth is configured. You can select Connect Gmail to authorize this account."
+        : "Gmail is not connected yet. The Google OAuth client and server secrets still need to be configured. Use the setup link above.";
+    refreshUI();
     return data;
   }
   async function createDraft(rec){
@@ -130,7 +150,7 @@
   async function click(e){
     const button=e.target.closest("button");const id=button?.id;
     if(!["cloud-open","cloud-before-unlock","cloud-close","cloud-configure","cloud-login","cloud-upload","cloud-restore","cloud-refresh","cloud-logout","gmail-status","gmail-authorize","gmail-activity"].includes(id))return;
-    if(id==="cloud-open"||id==="cloud-before-unlock"){$("cloud-modal").showModal();refreshUI();return}
+    if(id==="cloud-open"||id==="cloud-before-unlock"){$("cloud-modal").showModal();refreshUI();if(user)checkGmail().catch(err=>status("Error checking Gmail: "+err.message));return}
     if(id==="cloud-close"){$("cloud-modal").close();return}
     if(button.disabled)return;
     button.disabled=true;
@@ -147,9 +167,9 @@
         await upload(true);
       }else if(id==="cloud-restore")await restore();
       else if(id==="cloud-refresh"){await readRemote();status("Cloud status refreshed.");}
-      else if(id==="cloud-logout"){await client.auth.signOut();user=null;remote=null;linked=false;localStorage.removeItem(LINK);status("Signed out. Local vault unchanged.")}
-      else if(id==="gmail-status"){$("gmail-results").textContent=JSON.stringify(await gmail("status"),null,2);}
-      else if(id==="gmail-authorize"){const r=await gmail("authorize");if(!r.authorizeUrl)throw Error("Google authorization unavailable");location.assign(r.authorizeUrl);}
+      else if(id==="cloud-logout"){await client.auth.signOut();user=null;remote=null;linked=false;gmailReady=false;gmailConnected=false;localStorage.removeItem(LINK);status("Signed out. Local vault unchanged.")}
+      else if(id==="gmail-status"){await checkGmail();}
+      else if(id==="gmail-authorize"){if(!gmailReady)throw Error("Google OAuth is not configured yet. Follow the Google OAuth setup link.");const r=await gmail("authorize");if(!r.authorizeUrl)throw Error("Google authorization unavailable");location.assign(r.authorizeUrl);}
       else if(id==="gmail-activity"){
         const emails=(window.LeviOutreachTrackedEmails?.()||[]).slice(0,10);
         if(!emails.length)throw Error("No email prospects in unlocked vault");
