@@ -60,7 +60,7 @@ Future researched batches can be directly staged through authorized Supabase too
 
 ## Scheduled prospect discovery (GitHub Actions)
 
-A weekly GitHub Actions workflow now discovers low-volume, directory-sourced Madison/Milwaukee service-business candidates, validates provenance, deduplicates existing Research Inbox batches, and stages up to 12 research-only records. It never sends messages. **Staging is not operational until two GitHub Actions secrets are configured.** See [Automated Research setup](docs/AUTOMATED_RESEARCH.md). Directory candidates still require review of the business and opportunity before contact.
+A weekly GitHub Actions workflow now discovers low-volume, directory-sourced Madison/Milwaukee service-business candidates, validates provenance, deduplicates existing Research Inbox batches, and stages up to 12 research-only records. It never sends messages. **The intake uses GitHub OIDC; no GitHub secret configuration is needed. The endpoint is deployed, but a live scheduled run still needs verification.** See [Automated Research setup](docs/AUTOMATED_RESEARCH.md). Directory candidates still require review of the business and opportunity before contact.
 
 ## Cloud + Gmail integration
 
