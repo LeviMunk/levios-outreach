@@ -184,6 +184,32 @@
   }
   document.addEventListener("click",e=>{click(e).catch(err=>status("Error: "+err.message))});
   initUI();
+  const oauthQuery=new URLSearchParams(location.search);
+  if(oauthQuery.has("gmail")){
+    const result=oauthQuery.get("gmail");
+    const code=oauthQuery.get("gmail_error");
+    const details={
+      invalid_client:"Google rejected the Client ID or Client Secret. Check both values in Supabase Edge Function Secrets.",
+      invalid_grant:"Google rejected the authorization code. Make sure the redirect URI matches, then try Connect Gmail again.",
+      token_exchange:"Google could not exchange the authorization code. Verify the Google OAuth client and redirect URI.",
+      gmail_api:"Google granted access, but the Gmail API request failed. Confirm Gmail API is enabled in your Google Cloud project.",
+      wrong_account:"The Google account chosen does not match the Gmail address registered for LeviOS Outreach.",
+      oauth_state:"The authorization session expired or could not be verified. Click Connect Gmail again.",
+      refresh_token:"Google did not provide a refresh token. Reauthorize the app through Connect Gmail.",
+      encryption:"Gmail token encryption could not complete. Check GMAIL_TOKEN_ENCRYPTION_KEY in Supabase.",
+      database:"The secure Gmail connection could not be stored. Check Supabase Edge Function logs.",
+      callback_failed:"An authorization callback step failed. Check Supabase Edge Function logs."
+    };
+    status(result==="connected"
+      ?"Gmail authorization completed. Use Check connection to verify."
+      :"Error: Gmail authorization did not complete. "+(details[code]||details.callback_failed));
+    if(result!=="connected")$("gmail-results").textContent="Gmail authorization error: "+(code||"unknown");
+    $("cloud-modal")?.showModal();
+    const clean=new URL(location.href);
+    clean.searchParams.delete("gmail");
+    clean.searchParams.delete("gmail_error");
+    history.replaceState(null,"",clean.pathname+clean.search+clean.hash);
+  }
   window.LeviCloud={
     onLocalWrite(){if(linked&&user)schedule()},
     onVaultOpen(){refreshUI()},onLock(){refreshUI()},
