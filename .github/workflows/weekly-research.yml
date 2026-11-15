@@ -1,0 +1,36 @@
+name: LeviOS Outreach weekly prospect research
+on:
+  schedule:
+    - cron: '17 14 * * 1' # Monday 08:17 CST / 09:17 CDT (GitHub schedules are UTC)
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: levios-research
+  cancel-in-progress: false
+jobs:
+  discover-and-stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Discover public directory candidates
+        run: node scripts/discover-prospects.mjs
+      - name: Validate research pack
+        run: node scripts/validate-research-pack.mjs research-output/candidates.json
+      - name: Stage unique candidates in encrypted vault's owner-only Research Inbox
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          OUTREACH_OWNER_USER_ID: ${{ secrets.OUTREACH_OWNER_USER_ID }}
+        run: node scripts/stage-research-pack.mjs
+      - name: Upload research and review report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: outreach-research-${{ github.run_number }}
+          path: research-output/
+          if-no-files-found: ignore
+          retention-days: 14
