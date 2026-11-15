@@ -7,6 +7,18 @@ const gmail=readFileSync('supabase/functions/gmail-bridge/index.mjs','utf8');
 assert.match(app,/onLocalWrite/);
 assert.match(app,/gmaildraft/);
 assert.match(app,/STRATEGY_STARTERS/);
+assert.match(app,/LeviOutreachImportResearchPack/);
+assert.match(app,/options\.automatic/);
+assert.match(cloud,/syncResearchBatches/);
+assert.match(cloud,/outreach_research_batches/);
+assert.match(cloud,/outreach_ack_research_batch/);
+assert.match(cloud,/await upload\(\)/);
+assert.match(cloud,/onVaultOpen\(\)/);
+const researchSql=readFileSync('supabase/migrations/20261115000100_outreach_research_inbox.sql','utf8');
+assert.match(researchSql,/ENABLE ROW LEVEL SECURITY/);
+assert.match(researchSql,/REVOKE ALL ON public\.outreach_research_batches/);
+assert.match(researchSql,/auth\.uid\(\)/);
+
 assert.match(app,/async function mergeImport\(rows,strategyRows=\[\]\)/);
 assert.match(app,/addedStrategies/);
 assert.match(app,/sourceUrl/);
