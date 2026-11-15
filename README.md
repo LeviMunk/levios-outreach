@@ -29,9 +29,11 @@ Features are opt-in and stay disabled until the cloud is configured. Clicking **
 ### Integration status
 
 - Source code: committed and checked by GitHub Actions
-- Database migration: present but **not yet applied to your Supabase project**
-- Cloud login and synchronization: **awaiting Supabase account/project authorization**
-- Gmail OAuth + draft creation + metadata inspection: **awaiting Google OAuth credentials and Edge Function deployment**
+- Supabase project: **created** (`yfqtyuynsumvwhnmnswk`, initial project cost quoted $0/month)
+- Database migration: **applied**; RLS verified on all three tables
+- Public Supabase project URL and publishable key: **preconfigured** in `cloud.js`
+- Cloud login and synchronization: **awaiting Supabase Auth redirect URL and user magic-link verification**
+- Gmail Edge Function: **deployed**; Gmail authorization/draft creation awaits Google OAuth credentials and server-side secrets
 - Cross-device merge: not supported; conflicting revisions stop rather than overwrite
 
 ## Run locally
