@@ -1,37 +1,31 @@
-# Scheduled LeviOS Outreach Research
+# Automated research: configured without GitHub secrets
 
-GitHub Actions workflow: [Weekly Prospect Research](../.github/workflows/weekly-research.yml).
-This runs on Mondays at **14:17 UTC**, which is **8:17 AM CST / 9:17 AM CDT**. GitHub may delay scheduled jobs. The workflow can also run manually from **Actions → LeviOS Outreach weekly prospect research → Run workflow**.
+The weekly research pipeline is now GitHub Actions → short-lived GitHub OIDC token → Supabase `outreach-research-intake` Edge Function → owner-only research batch queue. **You do not need to configure a service-role key, user UUID, or any other GitHub Action secret.**
 
-## What it does
+- [Scheduled workflow](../.github/workflows/weekly-research.yml)
+- [Identity-verified intake source](../supabase/functions/outreach-research-intake/index.ts)
+- [LeviOS Outreach Actions](https://github.com/LeviMunk/levios-outreach/actions/workflows/weekly-research.yml)
 
-1. Queries bounded Madison and Milwaukee OpenStreetMap directory tags for businesses with listed websites.
-2. Excludes bakeries and several unsuitable categories. Does not scrape email addresses, use Google Maps data, impersonate a contact, or generate any messages.
-3. Writes a JSON research pack containing the business website, OSM evidence link, location, industry, and an explicitly hypothetical service opportunity. All entries are **directory-level leads**, not independently verified businesses or tested problems.
-4. Validates shape and provenance; reads existing staged research batches from the owner-only database and skips duplicates.
-5. Stages up to 12 new records in `public.outreach_research_batches`. Records are not imported into the encrypted vault until the legitimate owner opens the synced and unlocked app. The browser imports each batch and encrypts it before acknowledging completion.
-6. Saves a temporary GitHub Actions artifact for inspection (14-day retention). No email is sent or drafted.
+## Schedule and operation
 
-## One-time GitHub configuration (required)
+GitHub schedules it every Monday at **14:17 UTC (8:17 AM CST / 9:17 AM CDT)**. GitHub may delay cron runs. Alternatively, open the Actions link above and choose **Run workflow**.
 
-In **LeviMunk/levios-outreach → Settings → Secrets and variables → Actions → New repository secret**, add both:
+The workflow queries low-volume public OpenStreetMap business directory entries in bounded Madison/Milwaukee areas. It selects up to 12 service-business candidates, includes their source links and a clearly hypothetical opportunity, and never guesses email contacts. It verifies JSON shape, then requests an identity token from GitHub's OIDC service for audience `levios-outreach-research`. Only the specific `LeviMunk/levios-outreach/.github/workflows/weekly-research.yml` workflow on the `main` branch, triggered by cron or manual dispatch, can use this token to stage data. The Edge Function validates the GitHub JWT **signature** using GitHub's published public key, as well as audience, issuer, project/repository/ref/workflow/event/time claims. It does not trust an unauthenticated JSON payload or a caller-provided owner ID.
 
-- `SUPABASE_SERVICE_ROLE_KEY`: the existing project's server-side service-role key from Supabase Dashboard → Project Settings → API Keys (legacy service_role key; not a publishable key). This credential bypasses RLS, so limit repository collaborators and rotate it immediately if exposed. Never paste this secret into a GitHub issue, source code, chat, or public artifact.
-- `OUTREACH_OWNER_USER_ID`: the UUID of the existing authorized Supabase Auth user that owns the Outreach Research Inbox. Locate it in Supabase Dashboard → Authentication → Users. Do not use a GitHub username or email address.
+Supabase service-role credentials remain **server-side inside Supabase-managed Edge Function environment**, not GitHub and not the client application. The endpoint is configured `verify_jwt=false` intentionally because it verifies GitHub identity tokens itself rather than Supabase tokens. Server-side checks reject unverified directory submissions and non-research records.
 
-**No secrets were configured by this code commit.** Until both secrets are configured, the scheduled workflow's staging step fails closed, though its discovery and validation steps may produce a review artifact. The service key is used in a GitHub-hosted runner, not distributed to the website.
+The endpoint reads existing staged research to filter duplicates, associates new candidates with the already-authorized owner, and stages them for import. After the user unlocks the cloud-synced encrypted LeviOS vault in the browser, the existing client-side intake imports and encrypts each batch. No draft, email, or confirmation of sending occurs automatically.
 
-**Security:** This is a single-owner prototype with a high-privilege database key in a GitHub Actions secret. A narrower purpose-built ingestion API would be preferable for a larger system or a shared repository. Only trusted maintainers should be able to modify workflows, scripts, and the default branch. Consider branch protections and approval-gated environments.
+## Important limitations
 
-## Validation
+- OpenStreetMap business listings may be stale or inaccurate. These are **candidate prospects, not verified business opportunities**.
+- The backend compares against queued and processed research batches. It cannot directly inspect the owner's encrypted existing leads; the browser performs additional deduplication during import.
+- Public Overpass instances may be rate-limited or unavailable. If discovery fails, the workflow fails without fabricating a lead.
+- No proof that a company needs automation, nor any verified decision-maker email, is provided.
+- The workflow's first successful full end-to-end run and the next scheduled run should be checked in GitHub Actions.
+- The Supabase Edge Function's self-authorizing trust requires repository/workflow security: protect `main`, restrict workflow editing to trusted collaborators and avoid unreviewed pull request merges.
+- Existing ChatGPT scheduled tasks are not involved.
 
-```sh
-node --test tests/research-pack.test.mjs tests/discovery.test.mjs
-node scripts/validate-research-pack.mjs research-output/candidates.json
-```
+## Check
 
-The workflow does not establish that a site needs a service, that an OSM-listed website is correct, or that an email exists. **Review each business and research the actual opportunity before any contact.**
-
-If the Overpass public service is busy or refuses the query, the job stops without staging fake prospects. Retry later or swap to a compliant licensed directory. Low-volume public endpoints should not be abused.
-
-The staging deduplication checks existing Research Inbox batches. Existing prospects solely inside the encrypted private vault are hidden from the runner and will be skipped by the browser's own duplicate logic at import time.
+Run GitHub Actions **LeviOS Outreach checks** to verify code syntax and discovery tests. The weekly workflow's run logs/report show actual staged/skipped counts. Without a real execution, the pipeline is **deployed but not operationally verified**.
