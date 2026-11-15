@@ -1,8 +1,8 @@
-# LeviOS Outreach · v0.1
+# LeviOS Outreach · v0.2 (cloud integration foundation)
 
-A working, **browser-local and encrypted** outreach command-center prototype. It is a single-page static app suitable for GitHub Pages preview without cloud infrastructure or third-party API keys.
+A working encrypted, offline-first outreach command-center app. Its original browser-local mode still works independently; the newly committed **opt-in Supabase cloud synchronization and Gmail bridge require a Supabase project, SQL migration, Google OAuth setup, and server credentials before they become operational**.
 
-## Features implemented
+## Features currently usable without external services
 
 - A modern responsive dashboard with real record-derived metrics (no fabricated demo data)
 - Business, career, networking, and collaboration opportunities
@@ -17,6 +17,22 @@ A working, **browser-local and encrypted** outreach command-center prototype. It
 - Browser-local AES-256-GCM encryption using a PBKDF2-SHA256 derived key
 - Password is never stored; key remains only in memory; idle auto-lock after 20 minutes
 - Encrypted JSON backup/restore; unencrypted CSV export (with warning); CSV/JSON import with validation and duplicate checks
+
+## Cloud + Gmail integration (requires setup)
+
+New code: `cloud.js`, `supabase/migrations/20261115000000_outreach_cloud.sql`, `supabase/functions/gmail-bridge/index.mjs`, and `.github/workflows/check.yml`.
+
+**[Full setup guide](docs/CLOUD_SETUP.md)** covers Supabase user allowlisting, encrypted cloud revisions, conflict recovery, Gmail OAuth and the server-side refresh-token vault.
+
+Features are opt-in and stay disabled until the cloud is configured. Clicking **Cloud & Gmail** opens the setup panel. Cloud data is encrypted browser-side; Gmail authorization is separate. In the Outreach Queue, **Gmail Draft** is available for email prospects only after a valid Gmail connection is enabled. No messages are sent automatically.
+
+### Integration status
+
+- Source code: committed and checked by GitHub Actions
+- Database migration: present but **not yet applied to your Supabase project**
+- Cloud login and synchronization: **awaiting Supabase account/project authorization**
+- Gmail OAuth + draft creation + metadata inspection: **awaiting Google OAuth credentials and Edge Function deployment**
+- Cross-device merge: not supported; conflicting revisions stop rather than overwrite
 
 ## Run locally
 
@@ -44,13 +60,13 @@ This repository contains only application source code. Never commit private pros
 - An encrypted backup can be imported on another device, then unlocked with the original passphrase. This **replaces**, not merges, the local vault.
 - CSV export is intentionally marked as unencrypted. Protect exported CSV files appropriately.
 - A strong passphrase mitigates offline guessing; a compromised browser, malicious extension, or injected script could still read decrypted data while the app is unlocked.
-- The app currently imports JSON prospect arrays and simple CSVs. No background sync, verified Gmail integration, or AI backend exists yet.
+- The app imports JSON prospect arrays and simple CSVs. Optional encrypted cloud synchronization and a Gmail bridge have been implemented in source, but are not active until provider setup. A direct ChatGPT AI backend does not exist yet.
 
-## Subsequent milestones
+## Future milestones after cloud setup
 
-1. Choose Supabase Auth + PostgreSQL with row-level security **or** Cloudflare Access + Workers + D1 after evaluating actual setup and ongoing costs. Do not combine competing datastores.
-2. Move records to private server-side storage with authentication and encrypted token handling. Add migrations and server-side authorization tests.
-3. Implement Gmail OAuth, draft creation, sent/reply thread sync, follow-up suppression, and consented notifications.
+1. Complete Supabase project setup, authorized email sign-in, apply the SQL migration, and verify two-device encrypted sync and conflict handling.
+2. Deploy the Gmail Edge Function using Google OAuth credentials; verify draft creation and read-only metadata retrieval.
+3. Implement reviewed Gmail thread matching, confirmed-send and reply reconciliation, follow-up suppression, and consented notifications.
 4. Implement a schema-validated AI ingestion endpoint, with human approval, idempotency, and source attribution.
 5. Add import adapters to `LeviMunk/levios-career`, preserving its source and any real existing data. Its current README specifies no authentication, so do not expose it to the internet.
 6. Add automated tests beyond the static smoke checks and support safe deployments.
