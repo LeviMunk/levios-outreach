@@ -26,6 +26,27 @@ The **Strategy Lab** stores eight editable outreach hypotheses and allows new cu
 
 See [Strategy Lab playbook](docs/STRATEGY_LAB.md) for experiment design, measurement definitions, deliverability and truthful identity requirements.
 
+## Research packs and bulk lead intake
+
+LeviOS can import one JSON research pack with both `records` and `strategies`, or a simpler CSV or JSON prospect list. An intake pack is a plain-text file, **not** an encrypted cloud vault. Do not include credentials, private communications or non-public personal data.
+
+1. Research independently verifiable, appropriately sourced business prospects. Use directories for discovery and official websites for contact detail verification and commercial relevance. Do not bulk-copy Google Maps Places content; its reuse restrictions apply.
+2. For each prospect, include `name`, `type`, `industry`, `location`, `website`, `email` only if verified, `sourceUrl`, `researchDate`, `verification` (`official-site`, `directory`, or `unverified`), `angle` and `notes`. Leave unverified email blank; do not fabricate identified decision makers or claim unverified technical problems.
+3. For strategy additions, include `id`, `name`, `question`, `a`, `b`, `status`, `notes`. Existing strategy IDs/names are skipped rather than overwritten.
+4. Unlock LeviOS → **People & Companies → Import JSON / CSV** → select your research pack. Read the counts and approve. Duplicate prospects and duplicate strategies are skipped.
+5. Review imported prospects, select an experiment A or B, draft and manually send only after a factual/compliance check. Drafts and imports never send messages.
+
+Example structure:
+
+```json
+{
+  "records":[{"name":"Example Bakery","type":"Business","industry":"Bakeries","location":"Appleton, WI","website":"https://example.org","email":"","stage":"Researched","sourceUrl":"https://example.org","researchDate":"2026-11-15","verification":"unverified","angle":"Potential seasonal order follow-up workflow; hypothesis only","notes":"Sample data; validate before contacting."}],
+  "strategies":[{"id":"bakery-repeat-2026","name":"Bakery seasonal return visits","question":"Do rebooking prompts outperform general email campaigns?","a":"Seasonal preorder follow-up","b":"General new product invitation","status":"planned","notes":"Test within same industry and comparable offer."}]
+}
+```
+
+The research pack can be provided by ChatGPT as a downloadable JSON artifact, with source citations. **Encrypted-vault access stays in your browser.** No external assistant can directly mutate an unopened vault from GitHub. An explicit import is the secure handoff.
+
 ## Cloud + Gmail integration
 
 New code: `cloud.js`, `supabase/migrations/20261115000000_outreach_cloud.sql`, `supabase/functions/gmail-bridge/index.mjs`, and `.github/workflows/check.yml`.
