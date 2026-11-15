@@ -27,19 +27,19 @@
         <button type="button" data-view="insights" class="nav-item"><span class="nav-symbol">◩</span> Insights</button>
         <button type="button" data-view="strategies" class="nav-item"><span class="nav-symbol">◇</span> Strategy Lab</button>
       </nav>
-      <div class="sidebar-bottom"><div class="vault-status"><span class="status-dot"></span> Local vault unlocked</div><div class="sidebar-small">Encrypted on this browser · No cloud sync yet</div><button id="lock-button" class="sidebar-lock" type="button">⌁ &nbsp; Lock workspace</button></div>
+      <div class="sidebar-bottom"><div class="vault-status"><span class="status-dot"></span> Local vault unlocked</div><div class="sidebar-small">Encrypted in browser · Optional cloud sync</div><button id="lock-button" class="sidebar-lock" type="button">⌁ &nbsp; Lock workspace</button></div>
     </aside>
     <div class="main-area">
       <header class="topbar">
         <div class="mobile-brand"><span>◈</span> LEVIOS OUTREACH</div>
         <div class="crumb">PERSONAL WORKSPACE <span>/</span> <strong id="top-view">OVERVIEW</strong></div>
-        <div class="top-actions"><span class="private-pill"><span class="status-dot"></span> PRIVATE · DEVICE ONLY</span><button id="add-top" class="button button-primary" type="button">+ Add opportunity</button></div>
+        <div class="top-actions"><span class="private-pill"><span class="status-dot"></span> PRIVATE · ENCRYPTED</span><button id="add-top" class="button button-primary" type="button">+ Add opportunity</button></div>
       </header>
       <main class="content" id="main-content" tabindex="-1">
         <div class="page-heading"><div><div class="eyebrow" id="eyebrow">THURSDAY, NOVEMBER 12</div><h1 id="page-title">Outreach with intention<span class="lime-dot">.</span></h1><p id="page-subtitle">Know who matters, what to say, and when to follow up.</p></div><button type="button" id="add-main" class="button button-secondary">New prospect <span>↗</span></button></div>
         <div id="view-root" aria-live="polite"></div>
       </main>
-      <footer class="footer"><span>LEVIOS OUTREACH <b>v0.1</b></span><span>Browser-local encrypted prototype · Export backups regularly</span></footer>
+      <footer class="footer"><span>LEVIOS OUTREACH <b>v0.3</b></span><span>Encrypted local vault · Optional Supabase sync · Back up regularly</span></footer>
     </div>
   </div>
 
@@ -47,7 +47,7 @@
     <div class="unlock-art"><div class="unlock-orbit orbit-one"></div><div class="unlock-orbit orbit-two"></div><div class="unlock-monogram">LO<span>.</span></div><div class="unlock-caption">MAKE CONNECTIONS<br>THAT COMPOUND.</div></div>
     <div class="unlock-panel"><div class="unlock-heading"><span class="mini-mark">◆ LEVIOS / OUTREACH</span><h1 id="unlock-title">Your outreach,<br><em>organized.</em></h1><p id="unlock-description">A focused space for prospects, meaningful messages and reliable follow-through.</p></div>
       <form id="vault-form"><label for="vault-pass">Vault passphrase</label><input type="password" id="vault-pass" placeholder="At least 12 characters" autocomplete="new-password" minlength="12" required><div id="confirm-pass-field"><label for="vault-confirm">Confirm passphrase</label><input type="password" id="vault-confirm" placeholder="Enter it again" autocomplete="new-password" minlength="12"></div><button id="vault-submit" class="button button-primary wide" type="submit">Create my private workspace ↗</button><p id="vault-error" class="error" role="alert"></p></form>
-      <div class="security-note"><span>◈</span><p><strong>Your contacts stay in this browser.</strong> Data is encrypted with your passphrase before local storage. There is no server account or cross-device sync in this first release. If you lose your passphrase or clear browser data without a backup, your records cannot be recovered.</p></div>
+      <div class="security-note"><span>◈</span><p><strong>Your contacts are encrypted in this browser.</strong> Data is encrypted with your passphrase before local storage. Optional cloud sync is configured separately under Cloud & Gmail and stores only encrypted snapshots. If you lose your passphrase or clear browser data without a backup, your records cannot be recovered.</p></div>
     </div>
   </div>
 
@@ -55,7 +55,7 @@
     <div class="form-grid">
       <label class="field">Business / organization <em>*</em><input required maxlength="150" name="name" placeholder="e.g., Poppy Bakery"></label>
       <label class="field">Category<select name="type"><option value="Business">Business prospect</option><option value="Career">Career / recruiter</option><option value="Networking">Professional networking</option><option value="Collaboration">Collaboration</option></select></label>
-      <label class="field">Industry / focus<input maxlength="120" name="industry" placeholder="Bakery, SaaS, marketing..."></label>
+      <label class="field">Industry / focus<input maxlength="120" name="industry" list="industry-suggestions" placeholder="Select or type an industry"></label><datalist id="industry-suggestions"><option value="Restaurants"><option value="Bakeries"><option value="Pizza / Wings"><option value="Food & Beverage"><option value="Marketing Agencies"><option value="Manufacturing"><option value="Retail"><option value="Professional Services"><option value="Home Services"><option value="Healthcare"><option value="Education"><option value="SaaS / Technology"><option value="Arts & Crafts"><option value="Finance"></datalist>
       <label class="field">Location<input maxlength="120" name="location" placeholder="Milwaukee, WI"></label>
       <label class="field">Contact person<input maxlength="120" name="person" placeholder="If verified"></label>
       <label class="field">Preferred channel<select name="channel"><option value="Email">Email</option><option value="LinkedIn">LinkedIn</option><option value="Instagram">Instagram</option><option value="Other">Other</option></select></label>
