@@ -140,6 +140,35 @@
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&state&&Date.now()-lastActivityAt>20*60*1000)lockVault();});
   setInterval(()=>{if(state&&Date.now()-lastActivityAt>20*60*1000)lockVault();},60_000);
   if(!globalThis.crypto?.subtle){$('vault-error').textContent='Secure browser encryption is unavailable. Use HTTPS or localhost in a modern browser.';$('vault-submit').disabled=true;}
+  // Internal integration smoke test: save a plainly marked prospect to the encrypted browser vault.
+  // No real business is contacted, and the Gmail draft uses the owner's own email address.
+  window.LeviOutreachIsUnlocked=()=>!!state;
+  window.LeviOutreachCreateTestProspect=async()=>{
+    if(!state)throw Error('Unlock your private outreach vault first.');
+    const testId='levios-gmail-draft-test-v1';
+    const existing=findRecord(testId);
+    if(existing){
+      if(existing.email!=='levivanstap@gmail.com')throw Error('The existing test record has a different address. Edit or delete it before retrying.');
+      navigate('queue');
+      return existing;
+    }
+    const rec=normalized({
+      name:'LeviOS Gmail Integration Test',
+      type:'Networking',industry:'Internal integration test',location:'',
+      channel:'Email',email:'levivanstap@gmail.com',stage:'Draft Ready',
+      angle:'Safe self-addressed test of the LeviOS Outreach Gmail Draft workflow.',
+      subject:'[TEST] LeviOS Outreach Gmail draft integration',
+      draft:'This is a safe, self-addressed Gmail draft created through LeviOS Outreach. No email was sent. You can delete this draft after confirming it appeared in Gmail.',
+      notes:'INTERNAL TEST ONLY. Not a real prospect; safe to delete after verification.'
+    },testId);
+    const now=new Date().toISOString();
+    const saved={...rec,createdAt:now,updatedAt:now};
+    state.records.unshift(saved);
+    activity(saved.id,'created','Internal Gmail integration test prospect added');
+    await persist();
+    navigate('queue');
+    return saved;
+  };
   window.LeviOutreachTrackedEmails=()=>state?[...new Set(state.records.filter(r=>r.email&&isSent(r)).map(r=>r.email))]:[];
   setAuthMode();
 })();
