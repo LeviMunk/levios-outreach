@@ -1,0 +1,5 @@
+# Gmail's Google OAuth callback is publicly reachable, but the function validates signed state.
+# Every browser POST action independently validates the authenticated Supabase user JWT.
+[functions.gmail-bridge]
+verify_jwt = false
+entrypoint = "./functions/gmail-bridge/index.mjs"
