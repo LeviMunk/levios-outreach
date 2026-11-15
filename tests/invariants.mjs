@@ -19,7 +19,7 @@ assert.match(researchSql,/ENABLE ROW LEVEL SECURITY/);
 assert.match(researchSql,/REVOKE ALL ON public\.outreach_research_batches/);
 assert.match(researchSql,/auth\.uid\(\)/);
 
-assert.match(app,/async function mergeImport\(rows,strategyRows=\[\]\)/);
+assert.match(app,/async function mergeImport\(rows,strategyRows=\[\],options=\{\}\)/);
 assert.match(app,/addedStrategies/);
 assert.match(app,/sourceUrl/);
 assert.match(app,/researchDate/);
