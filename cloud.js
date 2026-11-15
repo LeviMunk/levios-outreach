@@ -64,7 +64,7 @@
     if(error)throw Error(error.message+"; verify migration and RLS");
     remote=data;revision=Number(data?.revision||0);
     let saved;try{saved=JSON.parse(localStorage.getItem(LINK)||"null")}catch{}
-    linked=!!(saved?.userId===user.id&&remote&&saved.revision===revision);
+    linked=!!(saved?.userId===user.id&&remote&&saved.revision===revision&&valid(vault()));
     if(saved&&!linked){localStorage.removeItem(LINK);status("Conflict: cloud and browser versions differ. Choose which snapshot to use.");}
     refreshUI();
   }
@@ -72,9 +72,13 @@
     const c=config();if(!c){refreshUI();return}
     try{
       makeClient(c);
-      const {data,error}=await client.auth.getUser();
-      if(error&&error.code!=="session_not_found")throw error;
-      user=data?.user||null;
+      const {data:sessionData,error:sessionError}=await client.auth.getSession();
+      if(sessionError)throw sessionError;
+      if(sessionData.session){
+        const {data,error}=await client.auth.getUser();
+        if(error)throw error;
+        user=data?.user||null;
+      }else user=null;
       if(user&&user.email?.toLowerCase()!==OWNER){await client.auth.signOut();user=null;throw Error("Owner email required")}
       if(user)await readRemote();
       refreshUI();
