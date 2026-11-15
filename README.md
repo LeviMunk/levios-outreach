@@ -57,6 +57,11 @@ To inspect status: open **Cloud & Gmail**, then look for **Research Inbox**. If 
 
 Future researched batches can be directly staged through authorized Supabase tools in the same JSON schema as the existing research-pack importer. A separate weekly research trigger may be arranged, but is not automatically enabled just by creating the queue.
 
+
+## Scheduled prospect discovery (GitHub Actions)
+
+A weekly GitHub Actions workflow now discovers low-volume, directory-sourced Madison/Milwaukee service-business candidates, validates provenance, deduplicates existing Research Inbox batches, and stages up to 12 research-only records. It never sends messages. **Staging is not operational until two GitHub Actions secrets are configured.** See [Automated Research setup](docs/AUTOMATED_RESEARCH.md). Directory candidates still require review of the business and opportunity before contact.
+
 ## Cloud + Gmail integration
 
 New code: `cloud.js`, `supabase/migrations/20261115000000_outreach_cloud.sql`, `supabase/functions/gmail-bridge/index.mjs`, and `.github/workflows/check.yml`.
