@@ -150,7 +150,7 @@
   }
   async function createDraft(rec){
     if(!rec?.email||!rec?.draft||rec.channel!=="Email")throw Error("Save the email recipient and message first");
-    const d=await gmail("draft",{recordId:rec.id,to:rec.email,subject:rec.subject||"Hello",body:rec.draft});
+    const d=await gmail("draft",{recordId:rec.id,to:rec.email,cc:rec.cc||"",subject:rec.subject||"Hello",body:rec.draft});
     status("Gmail draft created. No message was sent.");
     return d;
   }
