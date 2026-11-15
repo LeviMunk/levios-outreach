@@ -17,4 +17,6 @@ jobs:
           node --check cloud.js
           node --check supabase/functions/gmail-bridge/index.mjs
       - name: Security invariants
-        run: node tests/invariants.mjs
+        run: |
+          node tests/invariants.mjs
+          node --test tests/research-pack.test.mjs
