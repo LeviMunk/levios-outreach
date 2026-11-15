@@ -7,6 +7,7 @@
   const DEFAULT_CONFIG={url:"https://yfqtyuynsumvwhnmnswk.supabase.co",key:"sb_publishable_-l-qx8tIGXMvcQc9pcBq0w_nB2dEFQm"};
   let client=null, user=null, remote=null, revision=0, linked=false, saving=false, pending=false, timer=0, message="";
   let gmailReady=false, gmailConnected=false;
+  let researchImporting=false, researchMessage="Research Inbox: checking";
   const $=id=>document.getElementById(id);
   const vault=()=>{try{return JSON.parse(localStorage.getItem(VAULT)||"null")}catch{return null}};
   const valid=v=>!!(v&&v.version===1&&v.salt&&v.iv&&v.ciphertext);
@@ -27,6 +28,7 @@
     $("cloud-remote").textContent=remote?"Cloud revision "+remote.revision:"No cloud vault stored";
     $("cloud-local").textContent=valid(vault())?"Encrypted browser vault present":"No encrypted browser vault";
     $("cloud-link").textContent=linked?"Sync active on this device":"Not syncing on this device";
+    if($("research-status"))$("research-status").textContent=researchMessage;
     $("cloud-upload").disabled=!user||!valid(vault());
     $("cloud-restore").disabled=!user||!remote;
     $("cloud-upload").textContent=remote?"Replace cloud with THIS browser vault":"Upload browser vault and enable sync";
@@ -49,6 +51,7 @@
       '<button class="button button-primary" id="cloud-login">Email sign-in link</button></div>',
       '<div id="cloud-signed-pane" hidden><p class="small">Signed in: <strong id="cloud-user"></strong></p>',
       '<p class="small subtle" id="cloud-remote"></p><p class="small subtle" id="cloud-local"></p><p class="small" id="cloud-link"></p>',
+      '<p class="small" id="research-status">Research Inbox: checking</p>',
       '<div class="actions" style="display:flex;flex-wrap:wrap;gap:8px"><button class="button button-primary" id="cloud-upload">Upload browser vault</button>',
       '<button class="button button-secondary" id="cloud-restore">Restore cloud to browser</button>',
       '<button class="button button-secondary" id="cloud-refresh">Refresh status</button>',
@@ -91,6 +94,7 @@
       if(user&&user.email?.toLowerCase()!==OWNER){await client.auth.signOut();user=null;throw Error("Owner email required")}
       if(user)await readRemote();
       refreshUI();
+      if(user)await syncResearchBatches();
     }catch(e){status("Error: "+e.message);refreshUI();}
   }
   async function upload(force=false){
@@ -113,6 +117,49 @@
     }finally{saving=false;refreshUI();if(pending&&linked){pending=false;schedule();}}
   }
   const schedule=()=>{clearTimeout(timer);timer=setTimeout(()=>upload().catch(()=>{}),1200)};
+
+  // Research batches are server-staged public business information. Only a signed-in owner
+  // with an unlocked, revision-linked vault can automatically merge and encrypt them.
+  // Acknowledgement occurs only AFTER a successful encrypted Supabase revision save.
+  async function syncResearchBatches(){
+    if(researchImporting||!client||!user)return;
+    researchImporting=true;
+    try{
+      const {data,error}=await client.from("outreach_research_batches")
+        .select("id,batch_key,payload,created_at")
+        .eq("user_id",user.id).eq("status","queued")
+        .order("created_at",{ascending:true}).limit(20);
+      if(error)throw Error(error.message);
+      if(!data?.length){researchMessage="Research Inbox: all researched batches processed";refreshUI();return}
+      if(!window.LeviOutreachIsUnlocked?.()){
+        researchMessage="Research Inbox: "+data.length+" pending batch(es), automatically imported after vault unlock";
+        refreshUI();return;
+      }
+      if(!linked){
+        researchMessage="Research Inbox: "+data.length+" pending batch(es). Encrypted cloud sync must be active on this device; no records were changed.";
+        refreshUI();return;
+      }
+      if(!window.LeviOutreachImportResearchPack)throw Error("Refresh to load the research importer.");
+      let leads=0,strategies=0,skipped=0,processed=0;
+      for(const batch of data){
+        if(!linked||!window.LeviOutreachIsUnlocked?.())break;
+        // A queued batch is idempotent: duplicate leads already in the vault are skipped.
+        const report=await window.LeviOutreachImportResearchPack(batch.payload);
+        if(!report)throw Error("Research batch merge did not complete.");
+        clearTimeout(timer);
+        // Only mark the inbox batch complete when local ciphertext is safely in the cloud.
+        await upload();
+        const {data:ack,error:ackError}=await client.rpc("outreach_ack_research_batch",{p_batch_id:batch.id});
+        if(ackError)throw Error("Research stored, but acknowledgement failed: "+ackError.message);
+        if(ack!==true)throw Error("Research acknowledgement did not complete.");
+        leads+=report.added;strategies+=report.strategiesAdded;skipped+=report.skipped;processed++;
+      }
+      researchMessage="Research Inbox: "+leads+" leads + "+strategies+" strategies imported from "+processed+" batch(es); "+skipped+" duplicates/invalid skipped. No emails sent.";
+    }catch(e){
+      researchMessage="Research Inbox: "+e.message+". No emails were sent; queued batches remain available if sync failed.";
+    }finally{researchImporting=false;refreshUI();}
+  }
+
   async function restore(){
     if(!valid(remote?.payload))throw Error("No valid remote vault");
     if(!confirm("Replace this browser's encrypted vault with cloud data? Download a backup first."))return;
@@ -223,7 +270,7 @@
   }
   window.LeviCloud={
     onLocalWrite(){if(linked&&user)schedule()},
-    onVaultOpen(){refreshUI()},onLock(){refreshUI()},
+    onVaultOpen(){refreshUI();syncResearchBatches().catch(e=>status("Research Inbox: "+e.message))},onLock(){refreshUI()},
     async createDraft(rec){return createDraft(rec)},
     async reviewReplies(records){if(!gmailConnected)throw Error("Connect Gmail first.");return gmail("reviewReplies",{records});},
     isGmailConnected(){return gmailConnected},
