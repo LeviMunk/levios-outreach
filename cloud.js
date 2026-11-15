@@ -147,8 +147,11 @@
         const report=await window.LeviOutreachImportResearchPack(batch.payload);
         if(!report)throw Error("Research batch merge did not complete.");
         clearTimeout(timer);
-        // Only mark the inbox batch complete when local ciphertext is safely in the cloud.
-        await upload();
+        // Never acknowledge a batch while a concurrent cloud save may still be running.
+        if(saving||!linked)throw Error("An encrypted vault sync is already in progress or requires reconciliation");
+        // If everything was already in the linked vault, no rewrite is necessary.
+        if(report.added||report.strategiesAdded)await upload();
+        if(!linked)throw Error("Research not acknowledged: encrypted cloud sync did not complete");
         const {data:ack,error:ackError}=await client.rpc("outreach_ack_research_batch",{p_batch_id:batch.id});
         if(ackError)throw Error("Research stored, but acknowledgement failed: "+ackError.message);
         if(ack!==true)throw Error("Research acknowledgement did not complete.");
