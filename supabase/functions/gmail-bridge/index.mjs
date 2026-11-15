@@ -182,7 +182,8 @@ Deno.serve(async req=>{
     if(body.action==="status"){
       const {data,error}=await admin().from("outreach_gmail_connections").select("gmail_address,connected_at").eq("user_id",user.id).maybeSingle();
       if(error)throw Error(error.message);
-      return json({connected:!!data,address:data?.gmail_address||null,connectedAt:data?.connected_at||null});
+      const authorizationReady=!!(env("GMAIL_CLIENT_ID")&&env("GMAIL_CLIENT_SECRET")&&env("GMAIL_TOKEN_ENCRYPTION_KEY")&&env("GMAIL_OAUTH_STATE_SECRET"));
+      return json({connected:!!data,address:data?.gmail_address||null,connectedAt:data?.connected_at||null,authorizationReady,setupRequired:!authorizationReady});
     }
     if(body.action==="authorize")return json(await authorize(user));
     if(body.action==="draft")return json(await createDraft(user,body));
