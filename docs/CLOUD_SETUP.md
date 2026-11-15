@@ -2,20 +2,19 @@
 
 This application is operational in **encrypted browser-local mode**. The new Supabase cloud and Gmail controls are implemented but **not live** until you configure a Supabase project and deploy the SQL/Edge Function. No private data or secrets should be committed to GitHub.
 
-## Step 1: Create Supabase project and your single user
+## Step 1: Confirm the existing Supabase project and configure login
 
-1. Sign into [Supabase Dashboard](https://supabase.com/dashboard). Create a new project named `levios-outreach`. Choose a strong database password.
-2. Open **SQL Editor** and run the complete migration `supabase/migrations/20261115000000_outreach_cloud.sql`.
-3. Under **Authentication → Users**, create/invite the authorized user `levivanstap@gmail.com` (this is needed because the application uses `shouldCreateUser: false` in passwordless sign-in).
-4. Under **Authentication → URL Configuration**, set your Site URL to the actual published LeviOS Outreach URL and add it to allowed redirect URLs. Existing custom-domain deployments may be `https://levimunk.com/levios-outreach/`; verify the actual GitHub Pages URL first. Prefer adding both canonical and GitHub project URL if both can be visited.
-5. Disable open/public signups if this is strictly a one-person private workspace. The SQL additionally restricts access to the authorized owner email.
-6. Under project **API Keys**, obtain the **Project URL** and **public publishable key** (`sb_publishable_...`, or a legacy anon JWT). **Never enter a service-role or secret key in the public browser UI.**
+1. The project **levios-outreach** was created under the connected organization at [Supabase Dashboard](https://supabase.com/dashboard/project/yfqtyuynsumvwhnmnswk). The creation quote was $0/month.
+2. The migration `supabase/migrations/20261115000000_outreach_cloud.sql` **has already been applied**. Three tables have RLS enabled; Gmail tables have no browser-access policies.
+3. Under **Authentication → URL Configuration**, set your Site URL to `https://levimunk.com/levios-outreach/` and add that exact URL to **Redirect URLs**. Confirm the GitHub Pages deployment uses that address before saving. If your project is served from `https://levimunk.github.io/levios-outreach/` instead, add that URL too.
+4. In **Authentication → Providers → Email**, make sure email sign-in is enabled. The app requests a magic link for the single owner address and can create that verified identity on first login. For additional security, disable new sign-ups after your owner account is established.
+5. The project URL and public publishable key are now preconfigured in `cloud.js`. **Never place a service-role or secret key in the browser UI.**
 
 ## Step 2: Connect the encrypted vault
 
 1. Open the live app, unlock or create the local vault, and export an encrypted backup.
 2. Click **Cloud & Gmail** in the sidebar.
-3. Enter the Supabase project URL and **public** key, save, and request a magic-link sign-in to `levivanstap@gmail.com`.
+3. The Supabase project is already configured. Request a magic-link sign-in to `levivanstap@gmail.com`.
 4. Follow the sign-in link in the same browser profile where you started authentication. Return to **Cloud & Gmail**.
 5. If no remote vault exists, choose **Upload browser vault and enable sync**.
 6. If a remote vault already exists, choose whether to **restore remote** or **replace remote** after exporting an encrypted backup. Replacement requires two confirmations.
@@ -66,7 +65,7 @@ npx supabase secrets set --env-file .env.gmail
 npx supabase functions deploy gmail-bridge --no-verify-jwt
 ```
 
-The OAuth callback must be reachable without a Supabase JWT; the function verifies HMAC-signed, short-lived OAuth state on that callback and checks the Supabase user JWT on all browser POST actions. Its CORS origin is restricted by `LEVIOS_APP_URL`.
+The `gmail-bridge` Edge Function has already been deployed. OAuth itself remains unavailable until you set the Google OAuth secrets. The callback must be reachable without a Supabase JWT; the function verifies HMAC-signed, short-lived OAuth state on that callback and checks the Supabase user JWT on all browser POST actions. Its CORS origin is restricted by `LEVIOS_APP_URL`.
 
 ### Gmail features once connected
 
@@ -79,9 +78,9 @@ The OAuth callback must be reachable without a Supabase JWT; the function verifi
 
 ## What cannot be completed from GitHub alone
 
-- Creating the Supabase database/project, enabling its email identity, and running SQL migrations.
+- Enabling the correct Supabase Auth redirect URL and completing the owner's email sign-in.
 - Creating Google OAuth credentials and consenting to restricted Gmail scopes.
-- Setting server secrets and deploying the Gmail Edge Function.
+- Setting server secrets for the already deployed Gmail Edge Function.
 
 These steps require authorization inside the respective provider accounts. Until completed, the browser-local outreach tool remains available.
 
