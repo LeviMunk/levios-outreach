@@ -47,6 +47,16 @@ Example structure:
 
 The research pack can be provided by ChatGPT as a downloadable JSON artifact, with source citations. **Encrypted-vault access stays in your browser.** No external assistant can directly mutate an unopened vault from GitHub. An explicit import is the secure handoff.
 
+## Automatic Research Inbox (no JSON downloads)
+
+Verified public business research can be staged server-side in the owner-only `public.outreach_research_batches` Supabase table. The table enforces row-level security; unauthenticated users cannot query it or insert leads. Only the owner can read queued batches. A signed-in, unlocked and revision-linked browser client merges them directly into its encrypted vault and then saves an encrypted Supabase vault revision. **Only after that save succeeds** does the browser acknowledge the research batch as imported. Existing prospect and strategy duplicates are skipped, and existing local records are not overwritten. No messages or Gmail drafts are created.
+
+The initial queue contains **eight non-bakery Madison/Milwaukee-area service-business prospects and two industry-specific experimental strategies**, verified from first-party business pages on November 15, 2026. The queue stays pending until the owner unlocks the connected LeviOS vault in the updated app. A cloud-revision conflict stops the import and retains the queued batch for recovery, rather than overwriting existing data.
+
+To inspect status: open **Cloud & Gmail**, then look for **Research Inbox**. If the app reports that encrypted cloud sync is not active on the device, reconnect the existing vault instead of resetting it. Never send outreach automatically or make unsupported claims about the business.
+
+Future researched batches can be directly staged through authorized Supabase tools in the same JSON schema as the existing research-pack importer. A separate weekly research trigger may be arranged, but is not automatically enabled just by creating the queue.
+
 ## Cloud + Gmail integration
 
 New code: `cloud.js`, `supabase/migrations/20261115000000_outreach_cloud.sql`, `supabase/functions/gmail-bridge/index.mjs`, and `.github/workflows/check.yml`.
