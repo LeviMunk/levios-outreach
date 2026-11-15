@@ -149,6 +149,48 @@ async function createDraft(user,body){
   if(saved.error)throw Error("Draft exists in Gmail but tracking insert failed: "+saved.error.message);
   return {draftId:created.id,messageId:created.message?.id||null,existing:false,sent:false};
 }
+// Read-only reconciliation. A reply is only a candidate when an inbound message
+// shares a Gmail thread with a real outgoing SENT message to that prospect.
+// No message bodies are requested or stored; the user classifies results.
+async function reviewReplies(user,body){
+  const input=Array.isArray(body.records)?body.records:[];
+  if(input.length>12)throw Error("Review up to 12 verified prospects at a time");
+  if(input.some(r=>!r||!validEmail(r.email)||typeof r.id!=="string"||r.id.length>120
+      ||r.email.toLowerCase()===OWNER||!Number.isFinite(Date.parse(r.sentAt))))throw Error("Invalid reply review input");
+  const token=await accessToken(user.id);
+  const reviewed=[];
+  for(const r of input){
+    const email=r.email.toLowerCase().trim();
+    // Include earlier sent messages when a manual confirmation occurred after sending.
+    const since=Math.max(0,Math.floor((Date.parse(r.sentAt)-86400000)/1000));
+    const outboundQ="in:sent from:me to:"+email+" after:"+since;
+    const inboundQ="from:"+email+" to:me after:"+since+" -in:spam -in:trash";
+    const [outbound,inbound]=await Promise.all([
+      gmailGet(token,"messages?q="+encodeURIComponent(outboundQ)+"&maxResults=50"),
+      gmailGet(token,"messages?q="+encodeURIComponent(inboundQ)+"&maxResults=25")
+    ]);
+    const sentThreads=new Set((outbound.messages||[]).map(m=>m.threadId).filter(Boolean));
+    const matches=(inbound.messages||[]).filter(m=>sentThreads.has(m.threadId));
+    const candidates=[];
+    for(const msg of matches.slice(0,5)){
+      const query="messages/"+encodeURIComponent(msg.id)+"?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Date&metadataHeaders=Subject&metadataHeaders=Auto-Submitted&metadataHeaders=Precedence";
+      const meta=await gmailGet(token,query);
+      const headers=Object.fromEntries((meta.payload?.headers||[]).map(h=>[h.name.toLowerCase(),h.value]));
+      const source=String(headers.from||"").toLowerCase();
+      const fromAddress=source.includes("<")?source.match(/<([^>]+)>/)?.[1]:source.trim();
+      const labels=meta.labelIds||[];
+      if(fromAddress!==email||labels.includes("DRAFT")||labels.includes("SENT")||labels.includes("SPAM")||labels.includes("TRASH"))continue;
+      const automatic=String(headers["auto-submitted"]||"").toLowerCase();
+      const precedence=String(headers.precedence||"").toLowerCase();
+      if((automatic&&automatic!=="no")||["bulk","list","junk"].includes(precedence))continue;
+      const arrived=Number(meta.internalDate||0);
+      if(!Number.isFinite(arrived)||arrived<Date.parse(r.sentAt)-86400000)continue;
+      candidates.push({messageId:meta.id,threadId:meta.threadId,from:email,subject:String(headers.subject||"").slice(0,200),receivedAt:new Date(arrived).toISOString()});
+    }
+    reviewed.push({recordId:r.id,email,matched:candidates,uncheckedInbound:(inbound.messages||[]).length-matches.length,outboundFound:sentThreads.size>0,truncated:!!(outbound.nextPageToken||inbound.nextPageToken)});
+  }
+  return {reviewed,autoUpdated:false,matchedThreadOnly:true,readOnly:true};
+}
 async function activity(user,body){
   const emails=Array.isArray(body.emails)?body.emails:[];
   if(emails.length>10||emails.some(e=>!validEmail(e)))throw Error("Supply up to 10 verified email addresses");
@@ -214,6 +256,7 @@ Deno.serve(async req=>{
     if(body.action==="authorize")return json(await authorize(user));
     if(body.action==="draft")return json(await createDraft(user,body));
     if(body.action==="activity")return json(await activity(user,body));
+    if(body.action==="reviewReplies")return json(await reviewReplies(user,body));
     if(body.action==="disconnect"){
       const {error}=await admin().from("outreach_gmail_connections").delete().eq("user_id",user.id);
       if(error)throw Error(error.message);
