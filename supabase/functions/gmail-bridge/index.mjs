@@ -134,8 +134,10 @@ async function callback(url){
 }
 async function createDraft(user,body){
   const to=String(body.to||"").trim(),subject=String(body.subject||"").replace(/[\r\n]/g," ").trim(),text=String(body.body||"");
+  const cc=String(body.cc||"").split(",").map(x=>x.trim()).filter(Boolean);
+  if(cc.length>3||cc.some(x=>!validEmail(x)||x.toLowerCase()===to.toLowerCase())||new Set(cc.map(x=>x.toLowerCase())).size!==cc.length)throw Error("Invalid CC list");
   if(!validEmail(to)||subject.length>200||!text.trim()||text.length>9000||!body.recordId||String(body.recordId).length>100)throw Error("Invalid draft request");
-  const digest=await crypto.subtle.digest("SHA-256",encoder.encode(user.id+"|"+body.recordId+"|"+to+"|"+subject+"|"+text));
+  const digest=await crypto.subtle.digest("SHA-256",encoder.encode(user.id+"|"+body.recordId+"|"+to+"|"+cc.join(",")+"|"+subject+"|"+text));
   const key=hex(new Uint8Array(digest));
   const api=admin();
   const prev=await api.from("outreach_gmail_drafts").select("gmail_draft_id,gmail_message_id").eq("user_id",user.id).eq("idempotency_key",key).maybeSingle();
@@ -143,7 +145,7 @@ async function createDraft(user,body){
   if(prev.data)return {draftId:prev.data.gmail_draft_id,messageId:prev.data.gmail_message_id,existing:true,sent:false};
   const token=await accessToken(user.id);
   // Encode Unicode Subject as RFC 2047; message body is UTF-8 and entire MIME payload is base64url-encoded for Gmail.
-  const mime=["To: "+to,"Subject: =?UTF-8?B?"+toB64(encoder.encode(subject))+"?=","MIME-Version: 1.0","Content-Type: text/plain; charset=UTF-8","Content-Transfer-Encoding: 8bit","",text].join("\r\n");
+  const mime=["To: "+to,...(cc.length?["Cc: "+cc.join(", ")]:[]),"Subject: =?UTF-8?B?"+toB64(encoder.encode(subject))+"?=","MIME-Version: 1.0","Content-Type: text/plain; charset=UTF-8","Content-Transfer-Encoding: 8bit","",text].join("\r\n");
   const created=await gmailPost(token,"drafts",{message:{raw:b64url(encoder.encode(mime))}});
   const saved=await api.from("outreach_gmail_drafts").insert({user_id:user.id,idempotency_key:key,gmail_draft_id:created.id,gmail_message_id:created.message?.id||null});
   if(saved.error)throw Error("Draft exists in Gmail but tracking insert failed: "+saved.error.message);
