@@ -50,3 +50,11 @@ This is a manual, truth-based testing system, not a bulk-email sender. All prosp
 - Google Gmail thread grouping: https://developers.google.com/workspace/gmail/api/guides/threads
 - Mailchimp Apple Mail Privacy Protection caveat: https://mailchimp.com/help/apple-privacy-faq/
 
+
+## Prospect research and loading
+
+Research packs are plain JSON files with `records` and optional `strategies`. They can be prepared externally, with all source URLs kept. Import only after the owner reviews the research. In LeviOS, open **People & Companies → Import JSON / CSV**, select the JSON, and approve the counts. Duplicate records and strategy IDs are skipped; imports cannot send emails.
+
+Business website listings or chamber directories are useful discovery inputs. For contact verification, inspect the official business website and label only addresses explicitly published by the business. Store `sourceUrl`, `researchDate`, `verification`, and `notes` to make assertions auditable. Contact emails may change; recheck them before sending. Do not turn uncertain marketing hypotheses into fake revenue-loss claims.
+
+For Fox Valley bakery prospects, a practical first cohort is small local shops with an observable order/booking or seasonal offer. Compare problem-reveal versus benefit-led copy without changing the target audience, sender identity, offer, or CTA. Do not confuse targeted local business research with scraping Google Maps listings; see Google's Places API storage and scraping policy: https://developers.google.com/maps/documentation/places/web-service/policies
