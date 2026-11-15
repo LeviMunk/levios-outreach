@@ -207,7 +207,7 @@ async function saveStrategy(e){
   function exportCsv(){if(!confirm('CSV is plain text and will contain private contact information. Export an unencrypted CSV?'))return;const keys=['name','type','industry','location','person','channel','email','website','profile','stage','followup','concept','angle','subject','draft','notes'];const esc = v=>{let s=String(v??'');if(/^[=+@\-\t\r]/.test(s))s="'"+s;return '"'+s.replaceAll('"','""')+'"';};const rows=[keys.map(esc).join(','),...state.records.map(r=>keys.map(k=>esc(r[k])).join(','))].join('\r\n');download(`levios-outreach-${today()}.csv`,new Blob([rows],{type:'text/csv;charset=utf-8'}));notify('Plain-text CSV exported. Keep it private.');}
   function parseCsv(text){const lines=[];let row=[],cell='',quoted=false;for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(quoted&&text[i+1]==='"'){cell+='"';i++;}else quoted=!quoted;}else if(c===','&&!quoted){row.push(cell);cell='';}else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&text[i+1]==='\n')i++;row.push(cell);if(row.some(Boolean))lines.push(row);row=[];cell='';}else cell+=c;}if(quoted)throw Error('Unterminated CSV quoted field.');if(cell||row.length){row.push(cell);lines.push(row);}const header=lines.shift()?.map(v=>v.trim())||[];if(!header.includes('name'))throw Error('CSV needs a name column.');return lines.map(cols=>Object.fromEntries(header.map((key,i)=>[key,cols[i]||''])));}
   async function importFile(file){if(!file)return;try{if(file.size>5_000_000)throw Error('File is too large for a browser-local vault.');const content=await file.text();if(file.name.toLowerCase().endsWith('.csv')){const rows=parseCsv(content);await mergeImport(rows);return;}const value=JSON.parse(content);if(value?.ciphertext&&value?.salt&&value?.iv){if(!confirm('Restore this encrypted vault? Your current browser-local records will be replaced. Export a backup first. You will need the imported vault passphrase to unlock it.'))return;localStorage.setItem(STORAGE_KEY,content);lockVault();notify('Encrypted backup restored. Unlock using its original passphrase.');return;}const rows=Array.isArray(value)?value:Array.isArray(value?.records)?value.records:null;const strategies=Array.isArray(value?.strategies)?value.strategies:[];if(!rows&&!strategies.length)throw Error('Expected an array of prospects, {records:[...]}, {strategies:[...]}, or an encrypted vault backup.');await mergeImport(rows||[],strategies);}catch(err){alert(`Import failed: ${err.message}`);}finally{$('import-file').value='';}}
-  async function mergeImport(rows,strategyRows=[]){
+  async function mergeImport(rows,strategyRows=[],options={}){
     ensureStrategies();
     if(!Array.isArray(rows)||!Array.isArray(strategyRows))throw Error('Invalid research pack.');
     if(rows.length>500||strategyRows.length>50)throw Error('Maximum 500 prospects and 50 strategies per import.');
@@ -232,14 +232,16 @@ async function saveStrategy(e){
         const now=new Date().toISOString();proposed.push({...rec,createdAt:now,updatedAt:now});
       }catch{skipped++;}
     }
-    if(!proposed.length&&!addedStrategies.length)return notify('Nothing new to import. '+(skipped+skippedStrategies)+' duplicate or invalid entries skipped.');
+    const report={added:proposed.length,strategiesAdded:addedStrategies.length,skipped,strategiesSkipped:skippedStrategies};
+    if(!proposed.length&&!addedStrategies.length){if(options.automatic)return report;notify('Nothing new to import. '+(skipped+skippedStrategies)+' duplicate or invalid entries skipped.');return report;}
     const summary='Import '+proposed.length+' prospect(s) and '+addedStrategies.length+' new strategies into your encrypted vault? '+skipped+' prospect(s) and '+skippedStrategies+' strategy entry/entries skipped. No messages will be sent.';
-    if(!confirm(summary))return;
+    if(!options.automatic&&!confirm(summary))return null;
     state.strategies.push(...addedStrategies);
     state.records.push(...proposed);
     for(const r of proposed)activity(r.id,'imported','Research prospect imported');
     await persist();
     notify(proposed.length+' prospects and '+addedStrategies.length+' strategies imported. No email sent.');
+    return report;
   }
   function handleAction(el){const action=el.dataset.action,id=el.dataset.id;if(action==='scanreplies')return scanReplies();if(action==='classifyreply')return showReplyModal(id,el.dataset.message||'');if(action==='strategynew')return editStrategy();if(action==='strategyedit')return editStrategy(id);if(action==='new')return editRecord();if(action==='edit')return editRecord(id);if(action==='copyopen')return copyAndOpen(id);if(action==='gmaildraft'){const r=findRecord(id);if(r?.optedOut)return notify('Do not contact: this prospect opted out.');if(!window.LeviCloud)return notify('Cloud integration unavailable.');window.LeviCloud.createDraft(r).then(()=>notify('Gmail draft created, not sent. Check Gmail Drafts.')).catch(e=>alert('Gmail draft was not created: '+e.message));return;}if(action==='reply')return markReply(id);if(action==='snooze')return snooze(id);if(action==='backup')return encryptedBackup();if(action==='csv')return exportCsv();if(action==='import')return $('import-file').click();}
   document.addEventListener('pointerdown',()=>lastActivityAt=Date.now(),{passive:true});document.addEventListener('keydown',()=>lastActivityAt=Date.now());
@@ -262,6 +264,13 @@ async function saveStrategy(e){
   // Internal integration smoke test: save a plainly marked prospect to the encrypted browser vault.
   // No real business is contacted, and the Gmail draft uses the owner's own email address.
   window.LeviOutreachIsUnlocked=()=>!!state;
+  window.LeviOutreachImportResearchPack=async(pack)=>{
+    if(!state)throw Error('Unlock the encrypted workspace first.');
+    if(!pack||!Array.isArray(pack.records)||pack.records.length>50||!(pack.strategies===undefined||Array.isArray(pack.strategies)))throw Error('Invalid research inbox batch.');
+    // Import only public business research. Do not mark as contacted or create an email draft.
+    const rows=pack.records.map(r=>({...r,type:'Business',stage:'Researched',draft:'',subject:'',cc:'',followup:''}));
+    return mergeImport(rows,pack.strategies||[],{automatic:true});
+  };
   window.LeviOutreachCreateTestProspect=async()=>{
     if(!state)throw Error('Unlock your private outreach vault first.');
     const testId='levios-gmail-draft-test-v1';
