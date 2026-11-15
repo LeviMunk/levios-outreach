@@ -133,11 +133,15 @@
     const data=await gmail("status");
     gmailReady=data.authorizationReady===true;
     gmailConnected=data.connected===true;
+    const missing=Array.isArray(data.missingSecrets)?data.missingSecrets:[];
+    const invalid=Array.isArray(data.invalidSecrets)?data.invalidSecrets:[];
     $("gmail-results").textContent=gmailConnected
       ? "Gmail is connected: "+(data.address||"authorized account")
       : gmailReady
-        ? "Google OAuth is configured. You can select Connect Gmail to authorize this account."
-        : "Gmail is not connected yet. The Google OAuth client and server secrets still need to be configured. Use the setup link above.";
+        ? "Google OAuth is configured. Select Connect Gmail to authorize your account."
+        : missing.length||invalid.length
+          ? "Gmail authorization not ready.\n"+(missing.length?"Missing Supabase secrets: "+missing.join(", ")+"\n":"")+(invalid.length?"Invalid secret format: "+invalid.join(", ")+"\n":"")+"Save or correct those names under Supabase → Edge Functions → Secrets. No secret values are shown."
+          : "Gmail is not connected yet. Open the Google OAuth setup instructions above and check your Supabase secrets.";
     refreshUI();
     return data;
   }
