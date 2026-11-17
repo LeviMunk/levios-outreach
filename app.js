@@ -40,9 +40,9 @@
   const findRecord = id => state?.records.find(r=>r.id===id);
   const activity = (recordId,kind,summary,snapshot='',meta=null) => state.activities.unshift({id:randomId(),recordId,kind,summary,snapshot,meta,at:new Date().toISOString()});
   const workdaysFrom = (start,amount) => {let d=new Date(`${start}T12:00:00`),left=amount;while(left>0){d.setDate(d.getDate()+1);if(d.getDay()!==0&&d.getDay()!==6)left--;}return isoLocal(d);};
-  const isActive = r => !r.optedOut&&!['Closed','Won','Rejected','Withdrawn'].includes(r.stage);
+  const isActive = r => !r.optedOut&&r.intakeReview!=='passed'&&r.intakeReview!=='rejected'&&!['Closed','Won','Rejected','Withdrawn'].includes(r.stage);
   const isDue = r => isActive(r)&&r.followup&&r.followup<=today();
-  const isReady = r => !r.optedOut&&r.draft?.trim()&&!['Contacted','Responded','Concept Shared','Interested','Meeting Booked','Proposal','Won','Closed'].includes(r.stage);
+  const isReady = r => !r.optedOut&&r.intakeReview!=='passed'&&r.intakeReview!=='rejected'&&r.draft?.trim()&&!['Contacted','Responded','Concept Shared','Interested','Meeting Booked','Proposal','Won','Closed'].includes(r.stage);
   const isSent = rec => state.activities.some(a=>a.recordId===rec.id&&a.kind==='sent');
   const isReply = rec => state.activities.some(a=>a.recordId===rec.id&&a.kind==='replied');
   const humanReplyEvent = rec => state.activities.find(a=>a.recordId===rec.id&&a.kind==='replied');
@@ -294,6 +294,7 @@ async function saveReplyReview(e){
   const applied=careers.filter(r=>['Applied','Contacted','Recruiter Screen','Interview','Offer'].includes(r.stage)||!!r.appliedDate);
   const interviews=careers.filter(r=>['Interview','Offer'].includes(r.stage));
   const businessSent=commercial.filter(isSent),businessReplies=businessSent.filter(isReply),businessPositive=businessSent.filter(positiveReply),wins=commercial.filter(r=>r.stage==='Won');
+  const passed=all.filter(isPassed),passedReasons=Object.entries(passed.reduce((acc,r)=>{const k=r.passReason||'No reason recorded';acc[k]=(acc[k]||0)+1;return acc;},{})).sort((a,b)=>b[1]-a[1]);
   const group=new Map();
   for(const r of commercial){const key=(r.offerModule||r.industry||'Unspecified industry').trim();if(!group.has(key))group.set(key,{leads:0,sent:0,replies:0,positive:0,wins:0});const k=group.get(key);k.leads++;if(isSent(r)){k.sent++;if(isReply(r))k.replies++;if(positiveReply(r))k.positive++;}if(r.stage==='Won')k.wins++;}
   const rows=[...group.entries()].sort((a,b)=>b[1].leads-a[1].leads).map(([name,k])=>'<tr><td>'+escapeHtml(name)+'</td><td>'+k.leads+'</td><td>'+k.sent+'</td><td>'+k.replies+'</td><td>'+k.positive+'</td><td>'+k.wins+'</td></tr>').join('');
@@ -305,7 +306,7 @@ async function saveReplyReview(e){
     '<section class="card">'+cardHead('Employment & networking',null)+
       '<div class="funnel-summary">'+[['Jobs tracked',careers.length],['Applications',applied.length],['Interviews',interviews.length],['Offers',careers.filter(r=>r.stage==='Offer').length],['Network contacts',network.length]].map(([label,value])=>'<div class="funnel-step"><strong>'+value+'</strong><span>'+label+'</span></div>').join('')+'</div>'+
       '<p class="small subtle">These are current record stages, not a historical total of all interviews or offers. Recruiter outreach is tracked as messaging activity, separate from applications.</p>'+
-      '<h3 class="section-heading">Privacy & exports</h3><div class="inline-actions"><button class="button button-primary button-small" data-action="backup">Encrypted backup</button><button class="button button-secondary button-small" data-action="csv">Export CSV</button></div><p class="small subtle">CSV is unencrypted. Keep copies private.</p></section></div>'+replyReviewPanel();
+      '<h3 class="section-heading">Pass feedback · future ranking</h3>'+(passedReasons.length?passedReasons.map(([reason,n])=>'<div class="lead-row"><div class="lead-info"><span class="lead-name">'+escapeHtml(reason)+'</span></div><span class="badge">'+n+'</span></div>').join(''):'<p class="small subtle">No passes yet. Dismissing an opportunity records a reason and excludes that exact record from active queues.</p>')+'<h3 class="section-heading">Privacy & exports</h3><div class="inline-actions"><button class="button button-primary button-small" data-action="backup">Encrypted backup</button><button class="button button-secondary button-small" data-action="csv">Export CSV</button></div><p class="small subtle">CSV is unencrypted. Keep copies private.</p></section></div>'+replyReviewPanel();
 }
 function strategiesView(){
   ensureStrategies();
