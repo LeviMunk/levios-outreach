@@ -39,7 +39,7 @@ function validBusiness(r){
  r.type!=="Business"||r.stage!=="Researched"||r.email!==""||
  r.verification!=="directory"||!isUrl(r.website)||!isUrl(r.sourceUrl)||
  !/^https:\/\/www\.openstreetmap\.org\/(node|way|relation)\/\d+$/.test(r.sourceUrl)||
- typeof r.location!=="string"||!["Madison, WI","Milwaukee, WI"].includes(r.location)||
+ typeof r.location!=="string"||!["Fox Cities, WI","Madison, WI","Milwaukee, WI"].includes(r.location)||
  typeof r.industry!=="string"||!r.industry.trim()||
  typeof r.angle!=="string"||r.angle.length<15||r.angle.length>1200||
  !/^\d{4}-\d{2}-\d{2}$/.test(r.researchDate)||
