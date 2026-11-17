@@ -532,7 +532,7 @@ async function saveStrategy(e){
       if(!safeUrl(r.sourceUrl)||!r.researchDate)throw Error('Research source or date missing.');
       if(r.type==='Career'&&(!safeUrl(r.jobUrl)||r.verification!=='official-site'))throw Error('Career posting missing a verified source.');
       if(r.type==='Career Outreach'&&(!safeUrl(r.profile)||r.contactVerified!=='public-profile'||!r.person))throw Error('Career Outreach requires a named public professional contact.');
-      return {...r,stage:r.type==='Career'?'Discovered':'Researched',draft:'',subject:'',cc:'',followup:''};
+      return {...r,stage:r.type==='Career'?'Discovered':'Researched',channel:r.type==='Career Outreach'?'LinkedIn':r.channel,draft:'',subject:'',cc:'',followup:''};
     });
     return mergeImport(rows,pack.strategies||[],{automatic:true});
   };
