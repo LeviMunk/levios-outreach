@@ -16,7 +16,7 @@ const MILES={appleton:0,menasha:4.3,neenah:6.2,kimberly:3.8,'little chute':5,kau
 const TITLE=/automation analyst|business (?:systems? )?analyst|business intelligence|marketing (?:data |performance |operations |analytics |insights |strategy )?(?:analyst|specialist|coordinator|strategist|manager)|revenue operations|crm (?:analyst|specialist|manager)|customer insights|growth analyst|social media (?:manager|strategist|analyst)|digital marketing (?:analyst|strategist|manager)/i;
 const EXCLUDE=/internship|vice president|head of |executive director|merchandis|insurance agent|sales representative/i;
 const clean=h=>String(h||'').replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/\s+/g,' ');
-const website=u=>{try{const x=new URL(u);return x.protocol==='https:'&&['job-boards.greenhouse.io','boards.greenhouse.io','jobs.lever.co'].includes(x.hostname.toLowerCase())}catch{return false}};
+const website=u=>{try{const x=new URL(u);return x.protocol==='https:'&&['job-boards.greenhouse.io','job-boards.eu.greenhouse.io','boards.greenhouse.io','boards.eu.greenhouse.io','jobs.lever.co'].includes(x.hostname.toLowerCase())}catch{return false}};
 function place(location,body){
  const l=String(location||'').toLowerCase(),d=String(body||'').toLowerCase();
  for(const [city,miles] of Object.entries(MILES)){
