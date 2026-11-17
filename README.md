@@ -148,3 +148,31 @@ The next phase should normalize organizations, contacts, opportunities, messages
 ## Licensing
 
 This initial code is intended for the repository owner. Keep the new code and any credentials separate; it uses no external source-code libraries or paid APIs.
+### Employment inbox workflow (first functional pass)
+
+- **Employment** now displays a job intake list with company, job title, salary, location, posting link and status, plus its existing stage pipeline.
+- **Import jobs (CSV / JSON)** accepts the existing JobOS record format with `type: "Career"`, `name` (company), `jobTitle`, `jobUrl`, `salary`, `location`, `stage` and optional `appliedDate`. Imports show a review confirmation, skip duplicate applications of the same job and never send messages.
+- **Mark applied** requires manual confirmation of submission, timestamps the record and adds a six-business-day suggested follow-up. Merely opening a job posting does not count as applying.
+- The Career import deduplication key distinguishes jobs at the same company by posting URL or role; non-career prospect records retain category-specific contact/domain duplicate checks.
+- No actual live job provider integration, Career SQLite migration, or automated submission has occurred; imported records remain owner-reviewed and stored in the existing encrypted vault.
+
+Example import file:
+
+```json
+{
+  "records": [
+    {
+      "type": "Career",
+      "name": "Example Company",
+      "jobTitle": "Business Analyst",
+      "jobUrl": "https://example.com/careers/business-analyst",
+      "salary": "$75,000–$90,000",
+      "location": "Remote (US)",
+      "stage": "Discovered",
+      "sourceUrl": "https://example.com/careers/business-analyst",
+      "researchDate": "2026-11-17"
+    }
+  ]
+}
+```
+
