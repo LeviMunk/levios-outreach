@@ -188,7 +188,7 @@
   }
   async function approveMessage(id){
     const r=findRecord(id);if(!r||!isApproved(r))return notify('Approve the opportunity first.');
-    if(r.optedOut||!r.draft?.trim()||!destinationFor(r))return notify('A message, verified destination and active contact are required.');
+    if(r.optedOut||!r.draft?.trim())return notify('Save a message before approving it.');if(r.channel!=='Email'&&!destinationFor(r))return notify('Add a real professional profile URL before approving social outreach.');
     if(!confirm('Approve this exact message and recipient for '+r.name+'? Later edits require reapproval.'))return;
     r.approvedDraft=r.draft;r.approvedSubject=r.subject||'';r.approvedCc=r.cc||'';
     r.approvedDestination=r.channel==='Email'?(r.email||''):(r.profile||'');
@@ -472,9 +472,21 @@ async function saveStrategy(e){
     window.open(url,'_blank','noopener,noreferrer');
     notify(validMail(r.email)?'Gmail compose opened. This has not been sent.':'Gmail compose opened with an empty recipient. Add a real verified address before sending.');
   }
-  function confirmExternalSend(id){
+  async function confirmExternalSend(id){
     const r=findRecord(id);if(!r||isPassed(r)||r.optedOut)return;
     if(!r.draft?.trim())return notify('Save the draft before recording a send.');
+    if(r.channel==='Email'&&!validMail(r.email)){
+      const address=prompt('Which email address did you actually send this to? Enter the exact recipient address to record the send.','');
+      if(address===null)return;
+      const entered=String(address).trim();
+      if(!validMail(entered))return notify('Enter a valid email recipient. No send was recorded.');
+      if(!confirm('Confirm you actually sent this message to '+entered+'?'))return;
+      r.email=entered;
+      r.approvedDestination=entered;
+      r.updatedAt=new Date().toISOString();
+      activity(r.id,'recipient-confirmed','External email recipient entered after confirmed send','',{recipient:entered});
+      await persist();
+    }
     if(!isApproved(r)||!messageIsApproved(r))return notify('Approve the opportunity and exact saved message before recording a send.');
     pendingSendId=id;
     $('confirm-desc').textContent='Did you actually send this '+r.channel+' message to '+r.name+'? Opening Gmail or copying the draft does not count.';
