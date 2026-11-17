@@ -62,7 +62,7 @@ function validCareer(r){
  r.email||r.draft||r.subject||r.cc||r.followup)return false;
  const u=new URL(r.jobUrl);
  if(u.protocol!=="https:"||
- !["job-boards.greenhouse.io","boards.greenhouse.io","jobs.lever.co"].includes(u.hostname.toLowerCase())||
+ !["job-boards.greenhouse.io","job-boards.eu.greenhouse.io","boards.greenhouse.io","boards.eu.greenhouse.io","jobs.lever.co"].includes(u.hostname.toLowerCase())||
  !/\/jobs\/[^/]+|\/[^/]+\/[^/]+/.test(u.pathname))return false;
  const local=r.locationBucket==="local20"&&r.distanceMiles!==""&&Number.isFinite(Number(r.distanceMiles))&&
  Number(r.distanceMiles)>=0&&Number(r.distanceMiles)<=20;
