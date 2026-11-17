@@ -71,7 +71,7 @@ function validCareer(r){
  const role=r.roleFit==="strong"?25:r.roleFit==="moderate"?15:0;
  const pay=r.compensationFit==="target"?20:r.compensationFit==="minimum"?12:0;
  const ease=r.applicationFriction==="low"?15:r.applicationFriction==="medium"?7:0;
- return (local||remote)&&location+role+pay+ease+10>=75;
+ return (local||remote)&&!["high","workday"].includes(r.applicationFriction)&&location+role+pay+ease+10>=75;
 }
 function validRecord(r){return validBusiness(r)||validCareer(r)}
 function identityKey(r){
