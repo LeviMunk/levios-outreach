@@ -1,7 +1,7 @@
-name: LeviOS Outreach weekly prospect research
+name: JobOS local-first opportunity research
 on:
   schedule:
-    - cron: '17 14 * * 1' # Monday 08:17 CST / 09:17 CDT (UTC schedule)
+    - cron: '17 14 * * 1-5' # weekdays; 08:17 CST / 09:17 CDT
   workflow_dispatch:
 permissions:
   contents: read
@@ -12,26 +12,31 @@ concurrency:
 jobs:
   discover-and-stage:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Discover public directory candidates
+      - name: Discover source-backed local and remote jobs
+        run: node scripts/discover-jobs.mjs
+      - name: Discover business prospects on Mondays
+        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '17 14 * * 1'
+        continue-on-error: true
         run: node scripts/discover-prospects.mjs
-      - name: Validate research pack
-        run: node scripts/validate-research-pack.mjs research-output/candidates.json
-      - name: Stage using verified short-lived GitHub OIDC token
+      - name: Combine research with local-first job ordering
+        run: node scripts/combine-research.mjs
+      - name: Validate every record before staging
+        run: node scripts/validate-jobos-pack.mjs research-output/candidates.json
+      - name: Stage with a short-lived verified GitHub OIDC token
         env:
           INTAKE_URL: https://yfqtyuynsumvwhnmnswk.supabase.co/functions/v1/outreach-research-intake
-        run: |
-          node scripts/submit-oidc-research.mjs
+        run: node scripts/submit-oidc-research.mjs
       - name: Upload research report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: outreach-research-${{ github.run_number }}
+          name: jobos-research
           path: research-output/
           if-no-files-found: ignore
           retention-days: 14
