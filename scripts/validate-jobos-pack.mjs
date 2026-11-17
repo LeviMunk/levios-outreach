@@ -17,6 +17,12 @@ export function validateMixed(pack){
   if(r.locationBucket==='local20'&&!(r.distanceMiles!==''&&Number.isFinite(Number(r.distanceMiles))&&Number(r.distanceMiles)>=0&&Number(r.distanceMiles)<=20))errors.push('Career '+i+': local distance unverified');
   if(r.locationBucket==='remote'&&r.remoteWisconsinEligible!=='yes')errors.push('Career '+i+': Wisconsin eligibility unverified');
   if(!['strong','moderate'].includes(r.roleFit))errors.push('Career '+i+': role-fit missing');
+  const location=r.locationBucket==='local20'?30:r.locationBucket==='remote'&&r.remoteWisconsinEligible==='yes'?22:0;
+  const role=r.roleFit==='strong'?25:r.roleFit==='moderate'?15:0;
+  const pay=r.compensationFit==='target'?20:r.compensationFit==='minimum'?12:0;
+  const ease=r.applicationFriction==='low'?15:r.applicationFriction==='medium'?7:0;
+  if(location+role+pay+ease+10<75)errors.push('Career '+i+': below 75-point minimum');
+
   if(r.email||r.draft||r.subject||r.cc||r.followup)errors.push('Career '+i+': outbound data not allowed');
   const key=String(r.jobUrl||'').split('?')[0].toLowerCase();if(seen.has(key))errors.push('Duplicate career URL');seen.add(key);
  }
