@@ -1,31 +1,35 @@
-# Automated research: configured without GitHub secrets
+# JobOS automated local-first research
 
-The weekly research pipeline is now GitHub Actions → short-lived GitHub OIDC token → Supabase `outreach-research-intake` Edge Function → owner-only research batch queue. **You do not need to configure a service-role key, user UUID, or any other GitHub Action secret.**
+## Status as of November 17, 2026
 
-- [Scheduled workflow](../.github/workflows/weekly-research.yml)
-- [Identity-verified intake source](../supabase/functions/outreach-research-intake/index.ts)
-- [LeviOS Outreach Actions](https://github.com/LeviMunk/levios-outreach/actions/workflows/weekly-research.yml)
+- **Deployed:** owner-only Supabase Research Inbox, signed GitHub OIDC Edge Function (version 3), and encrypted browser importer capable of preserving Career and Business records.
+- **Configured:** the GitHub Actions workflow `.github/workflows/weekly-research.yml` runs on weekdays at 14:17 UTC (8:17 AM CST / 9:17 AM CDT), and can be dispatched manually through GitHub.
+- **Verification outstanding:** a complete scheduled GitHub Actions → OIDC → Supabase → unlocked cloud vault run has not yet been observed. Do not treat a successful deploy or static tests as proof of end-to-end production operation.
+- **Current staging:** two queued research batches, including an employer-hosted Michels Corporation Global Automation Analyst posting for Neenah. Staged means waiting for the authenticated cloud-linked browser to import and encrypt records; it is not an application.
+- **Separate ChatGPT automation:** JobOS Local-First Intake provides research and prep, but does not itself have permission to insert into the GitHub OIDC staging endpoint. The GitHub Actions collector is the direct source producer.
 
-## Schedule and operation
+## Workflow
 
-GitHub schedules it every Monday at **14:17 UTC (8:17 AM CST / 9:17 AM CDT)**. GitHub may delay cron runs. Alternatively, open the Actions link above and choose **Run workflow**.
+1. `scripts/discover-jobs.mjs` queries a fixed, reviewable set of employer-hosted Greenhouse and Lever job boards. The board list is not exhaustive; some boards may return 404, transient errors, or no relevant openings.
+2. Rejects irrelevant job titles, unknown Wisconsin eligibility and unsupported locations. Uses approximate Appleton-to-city-center distances only for a conservative local-first *ranking*. These are not verified workplace addresses or driving distances.
+3. Extracts salary only when an explicit dollar salary range is parsable. Unknown pay and application friction remain unknown; no field should be invented to inflate fit scores.
+4. On Mondays, `scripts/discover-prospects.mjs` may add directory-backed business opportunities. `scripts/combine-research.mjs` prioritizes local jobs, then eligible remote jobs, then business records, with at most 12 per signed batch.
+5. `scripts/validate-jobos-pack.mjs` rejects unsupported employers/URLs, remote eligibility without evidence markers, drafts, emails, and job applications.
+6. The workflow obtains a short-lived GitHub OIDC token and submits to `outreach-research-intake`. The Edge Function verifies issuer, audience, repository, workflow path, branch, event, token validity and cryptographic signature, then validates each record again.
+7. The Edge Function rejects duplicates by normalized career posting URL or business identity and filters exact **Passed** keys from an owner-only feedback table.
+8. JobOS `cloud.js` imports queued batches only when the authenticated owner is using an unlocked, synchronized vault. The app preserves `Career` as `Career` (fixed November 17), strips any send/application fields, deduplicates against the actual vault, encrypts/syncs, then acknowledges the queued research batch.
+9. Clicking **Pass** stores the reason locally in the encrypted vault. When cloud sync is linked, JobOS also upserts the public opportunity key and rejection reason to `outreach_research_feedback` under RLS scoped to the authenticated owner. The server uses this feedback to suppress exact previously passed opportunities on future intake; it does **not** train a statistical model, infer new user preferences, or expose resumes and messages.
 
-The workflow queries low-volume public OpenStreetMap business directory entries in bounded Madison/Milwaukee areas. It selects up to 12 service-business candidates, includes their source links and a clearly hypothetical opportunity, and never guesses email contacts. It verifies JSON shape, then requests an identity token from GitHub's OIDC service for audience `levios-outreach-research`. Only the specific `LeviMunk/levios-outreach/.github/workflows/weekly-research.yml` workflow on the `main` branch, triggered by cron or manual dispatch, can use this token to stage data. The Edge Function validates the GitHub JWT **signature** using GitHub's published public key, as well as audience, issuer, project/repository/ref/workflow/event/time claims. It does not trust an unauthenticated JSON payload or a caller-provided owner ID.
+## Scope and operational limits
 
-Supabase service-role credentials remain **server-side inside Supabase-managed Edge Function environment**, not GitHub and not the client application. The endpoint is configured `verify_jwt=false` intentionally because it verifies GitHub identity tokens itself rather than Supabase tokens. Server-side checks reject unverified directory submissions and non-research records.
+This pipeline currently uses employer ATS boards, not every local employer job site. There is no guarantee of 5–10 suitable openings per day. Missing matches should produce no invented opportunities. Full ATS document generation, hiring-contact verification, low-friction application checks and application submission still require separate workflows and user review. Outbound messages and submitted applications are **never** generated merely by research staging.
 
-The endpoint reads existing staged research to filter duplicates, associates new candidates with the already-authorized owner, and stages them for import. After the user unlocks the cloud-synced encrypted LeviOS vault in the browser, the existing client-side intake imports and encrypts each batch. No draft, email, or confirmation of sending occurs automatically.
+## Verify
 
-## Important limitations
+- GitHub Actions: [JobOS research workflow](https://github.com/LeviMunk/levios-outreach/actions/workflows/weekly-research.yml)
+- GitHub Actions: [JobOS intake checks](https://github.com/LeviMunk/levios-outreach/actions/workflows/jobos-ci.yml)
+- Check `research-output/job-report.json`, `research-output/report.json` and the workflow job logs for validated and staged counts.
+- Supabase: confirm `outreach-research-intake` is active and `outreach_research_feedback` has RLS/owner-only policies.
+- Browser: open JobOS, unlock existing encrypted vault, confirm Cloud & Gmail shows linked sync, and inspect Research Inbox status. Confirm Career postings appear in Employment without being reclassified as Business and that cloud acknowledgement follows import.
+- Test Pass on a real unneeded item and confirm future source deduplication uses that exact opportunity key after encrypted vault sync and owner-only feedback sync.
 
-- OpenStreetMap business listings may be stale or inaccurate. These are **candidate prospects, not verified business opportunities**.
-- The backend compares against queued and processed research batches. It cannot directly inspect the owner's encrypted existing leads; the browser performs additional deduplication during import.
-- Public Overpass instances may be rate-limited or unavailable. If discovery fails, the workflow fails without fabricating a lead.
-- No proof that a company needs automation, nor any verified decision-maker email, is provided.
-- The workflow's first successful full end-to-end run and the next scheduled run should be checked in GitHub Actions.
-- The Supabase Edge Function's self-authorizing trust requires repository/workflow security: protect `main`, restrict workflow editing to trusted collaborators and avoid unreviewed pull request merges.
-- Existing ChatGPT scheduled tasks are not involved.
-
-## Check
-
-Run GitHub Actions **LeviOS Outreach checks** to verify code syntax and discovery tests. The weekly workflow's run logs/report show actual staged/skipped counts. Without a real execution, the pipeline is **deployed but not operationally verified**.
