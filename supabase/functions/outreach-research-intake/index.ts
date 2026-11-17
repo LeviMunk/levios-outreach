@@ -33,7 +33,7 @@ async function authorize(auth){
 }
 function isUrl(v){try{const u=new URL(v);return u.protocol==="https:"||u.protocol==="http:"}catch{return false}}
 function host(v){try{return new URL(v).hostname.toLowerCase().replace(/^www\./,"")}catch{return ""}}
-function validRecord(r){
+function validBusiness(r){
  if(!r||typeof r!=="object"||Array.isArray(r))return false;
  if(typeof r.name!=="string"||!r.name.trim()||r.name.length>150||
  r.type!=="Business"||r.stage!=="Researched"||r.email!==""||
@@ -46,6 +46,33 @@ function validRecord(r){
  r.researchDate>new Date().toISOString().slice(0,10)||
  r.draft||r.subject||r.cc||r.followup)return false;
  return true;
+}
+function validCareer(r){
+ if(!r||typeof r!=="object"||Array.isArray(r))return false;
+ if(r.type!=="Career"||r.stage!=="Discovered"||r.verification!=="official-site"||
+ typeof r.name!=="string"||!r.name.trim()||r.name.length>150||
+ typeof r.jobTitle!=="string"||!r.jobTitle.trim()||r.jobTitle.length>180||
+ typeof r.jobUrl!=="string"||r.sourceUrl!==r.jobUrl||!isUrl(r.jobUrl)||
+ typeof r.location!=="string"||!r.location.trim()||r.location.length>120||
+ !/^\d{4}-\d{2}-\d{2}$/.test(r.researchDate||"")||
+ r.researchDate>new Date().toISOString().slice(0,10)||
+ !["strong","moderate"].includes(r.roleFit)||
+ !["","target","minimum","unknown"].includes(r.compensationFit)||
+ (r.applicationFriction&&!["low","medium","high","workday"].includes(r.applicationFriction))||
+ r.email||r.draft||r.subject||r.cc||r.followup)return false;
+ const u=new URL(r.jobUrl);
+ if(u.protocol!=="https:"||
+ !["job-boards.greenhouse.io","boards.greenhouse.io","jobs.lever.co"].includes(u.hostname.toLowerCase())||
+ !/\/jobs\/[^/]+|\/[^/]+\/[^/]+/.test(u.pathname))return false;
+ const local=r.locationBucket==="local20"&&r.distanceMiles!==""&&Number.isFinite(Number(r.distanceMiles))&&
+ Number(r.distanceMiles)>=0&&Number(r.distanceMiles)<=20;
+ const remote=r.locationBucket==="remote"&&r.remoteWisconsinEligible==="yes";
+ return local||remote;
+}
+function validRecord(r){return validBusiness(r)||validCareer(r)}
+function identityKey(r){
+ if(r.type==="Career"){try{const u=new URL(r.jobUrl);return "career|"+u.origin+u.pathname.replace(/\/$/,"").toLowerCase()}catch{return "invalid"}}
+ return "business|"+r.name.trim().toLowerCase()+"|"+host(r.website);
 }
 const headers=(key)=>({apikey:key,Authorization:"Bearer "+key,"content-type":"application/json"});
 async function db(url,key,path,opts={}){
@@ -60,9 +87,9 @@ Deno.serve(async req=>{
  if(!url||!key)return fail(503,"Server configuration unavailable");
  let pack;try{const body=await req.text();if(body.length>100000)return fail(413,"Research payload too large");pack=JSON.parse(body)}catch{return fail(400,"Invalid JSON")}
  if(!pack||!Array.isArray(pack.records)||pack.records.length<1||pack.records.length>12||
- !pack.records.every(validRecord)||pack.strategies?.length)return fail(422,"Only sourced, unsent directory research is accepted");
+ !pack.records.every(validRecord)||pack.strategies?.length)return fail(422,"Only sourced, unsent employer jobs and verified directory research are accepted");
  const inBatch=new Set();
- for(const r of pack.records){const k=r.name.trim().toLowerCase()+"|"+host(r.website);if(inBatch.has(k))return fail(422,"Duplicate lead within submitted batch");inBatch.add(k)}
+ for(const r of pack.records){const k=identityKey(r);if(inBatch.has(k))return fail(422,"Duplicate lead within submitted batch");inBatch.add(k)}
  try{
   // Existing owner-only inbox provides stable identity. This endpoint never takes user_id from caller.
   const existing=await db(url,key,"outreach_research_batches?select=user_id,payload&limit=1000");
@@ -74,12 +101,14 @@ Deno.serve(async req=>{
   if(!identity.ok)return fail(503,"Owner identity unavailable");
   const owner=await identity.json();
   if(owner?.email?.toLowerCase()!==OWNER_EMAIL)return fail(403,"Owner identity mismatch");
-  const seen=new Set(existing.flatMap(b=>(b.payload?.records||[]).map(r=>r.name?.trim().toLowerCase()+"|"+host(r.website))));
-  const fresh=pack.records.filter(r=>!seen.has(r.name.trim().toLowerCase()+"|"+host(r.website)));
+  const seen=new Set(existing.flatMap(b=>(b.payload?.records||[]).map(identityKey)));
+  // Both queued and acknowledged batches count toward history; preserve explicit Pass records in vault.
+  const fresh=pack.records.filter(r=>!seen.has(identityKey(r)));
+  // Jobs are unique per posting URL, not per employer; allow multiple distinct roles at one company.
   if(!fresh.length)return new Response(JSON.stringify({staged:0,skipped:pack.records.length,status:"duplicates"}),{headers:{"content-type":"application/json"}});
-  const ids=fresh.map(r=>r.name.toLowerCase()+"|"+host(r.website)).sort().join("\n");
+  const ids=fresh.map(identityKey).sort().join("\n");
   const hash=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(ids))),b=>b.toString(16).padStart(2,"0")).join("").slice(0,24);
-  const batch={user_id:ownerId,batch_key:"osm-weekly-"+hash,origin:"research",payload:{records:fresh,strategies:[]},status:"queued"};
+  const batch={user_id:ownerId,batch_key:"jobos-research-"+hash,origin:"research",payload:{records:fresh,strategies:[]},status:"queued"};
   await db(url,key,"outreach_research_batches?on_conflict=user_id,batch_key",{
    method:"POST",headers:{Prefer:"resolution=ignore-duplicates,return=minimal"},body:JSON.stringify(batch)
   });
