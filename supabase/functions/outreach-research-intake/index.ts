@@ -67,7 +67,11 @@ function validCareer(r){
  const local=r.locationBucket==="local20"&&r.distanceMiles!==""&&Number.isFinite(Number(r.distanceMiles))&&
  Number(r.distanceMiles)>=0&&Number(r.distanceMiles)<=20;
  const remote=r.locationBucket==="remote"&&r.remoteWisconsinEligible==="yes";
- return local||remote;
+ const location=local?30:remote?22:0;
+ const role=r.roleFit==="strong"?25:r.roleFit==="moderate"?15:0;
+ const pay=r.compensationFit==="target"?20:r.compensationFit==="minimum"?12:0;
+ const ease=r.applicationFriction==="low"?15:r.applicationFriction==="medium"?7:0;
+ return (local||remote)&&location+role+pay+ease+10>=75;
 }
 function validRecord(r){return validBusiness(r)||validCareer(r)}
 function identityKey(r){
