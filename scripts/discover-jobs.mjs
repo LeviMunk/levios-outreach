@@ -65,7 +65,7 @@ export async function discover(fetcher=fetch){
    if(!Array.isArray(jobs))throw Error('not a job list');
    for(const x of jobs.slice(0,1000)){
     const job=kind==='gh'?{company,title:x.title,location:x.location?.name||'',body:clean(x.content),url:x.absolute_url}:{company,title:x.text,location:x.categories?.location||'',body:clean(x.descriptionPlain||x.description),url:x.hostedUrl};
-    const record=candidate(job);if(record&&scoreCareer(record)>=75)output.push(record);
+    const record=candidate(job);if(record&&!['high','workday'].includes(record.applicationFriction)&&scoreCareer(record)>=75)output.push(record);
    }
   }catch(e){errors.push(slug+': '+e.message)}
  }
