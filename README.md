@@ -1,3 +1,17 @@
+
+## Assembly-line approval workflow (November 17, 2026)
+
+The **Intake & Approvals** tab provides explicit gates across Employment, Business Development, and Networking:
+
+1. Research/import creates **pending** records. Existing legacy records without an approval flag are also presented for review; no prior sent history is erased.
+2. Review each job's listing URL, a professional network profile, or a business source URL with a documented verification label. Then explicitly approve or decline the opportunity. No external evidence is automatically assumed true.
+3. Write a tailored message and **approve the exact text, subject, recipient, channel and CC**. Modifying these fields invalidates the prior approval. Changing source or recipient details also returns the opportunity to verification.
+4. Only the approved message can be sent to Gmail Drafts or opened/copied for social outreach. Creating a draft does not mark a send.
+5. Marking a job application requires a reviewed job plus explicit submission confirmation; follow-ups are scheduled afterward.
+6. All approvals, sends and application confirmations are recorded as local encrypted-vault activities.
+
+**Scope:** This release implements the review/approval engine and manual execution controls. It does **not** yet provide a live automatic job-search feed, automatic email sends, automatic job applications or migration from the local LeviOS Career SQLite database. Existing scheduled business research intake remains a separate configured flow and is still imported only when the unlocked app accepts it. Always verify employment eligibility and source authenticity before approving.
+
 # JobOS · Unified Opportunity Command Center
 
 JobOS is the next iteration of LeviOS Outreach, using the existing encrypted vault, Gmail bridge, Supabase configuration, and outreach records. The source repository deliberately retains its existing name so deployed URLs, integrations and browser storage are not disrupted.
