@@ -1,4 +1,8 @@
 
+## Work packages and conversion funnels
+Employment records now optionally store `resumeUrl`, `coverLetterUrl`, `applicationFriction`, `contactVerified`, and `packageNotes`. Business/IndustryOS records may store `offerModule`, `painEvidenceUrl`, and `painHypothesis`. The Employment and Business workspaces show package readiness and linked documents or supporting research, not generated artifacts. Missing links remain missing until materials are prepared. Business pain points are explicitly hypotheses, not factual claims.
+Insights now shows distinct employment and business metrics, including human/positive business replies and wins; small cohorts should not be treated as predictive evidence. The application views do not yet generate tailored resumes or letters autonomously, nor do they have continuous live job discovery.
+
 ## Assembly-line approval workflow (November 17, 2026)
 
 The **Intake & Approvals** tab provides explicit gates across Employment, Business Development, and Networking:
