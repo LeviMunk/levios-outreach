@@ -101,8 +101,11 @@ Deno.serve(async req=>{
   if(!identity.ok)return fail(503,"Owner identity unavailable");
   const owner=await identity.json();
   if(owner?.email?.toLowerCase()!==OWNER_EMAIL)return fail(403,"Owner identity mismatch");
-  const seen=new Set(existing.flatMap(b=>(b.payload?.records||[]).map(identityKey)));
-  // Both queued and acknowledged batches count toward history; preserve explicit Pass records in vault.
+  const feedback=await db(url,key,"outreach_research_feedback?select=opportunity_key&user_id=eq."+ownerId+"&limit=5000");
+  if(feedback.length>=5000)return fail(409,"Feedback history exceeds safe lookup window");
+  const seen=new Set([...existing.flatMap(b=>(b.payload?.records||[]).map(identityKey)),
+    ...feedback.map(x=>x.opportunity_key)]);
+  // Previously staged records and owner-passed opportunities remain suppressed.
   const fresh=pack.records.filter(r=>!seen.has(identityKey(r)));
   // Jobs are unique per posting URL, not per employer; allow multiple distinct roles at one company.
   if(!fresh.length)return new Response(JSON.stringify({staged:0,skipped:pack.records.length,status:"duplicates"}),{headers:{"content-type":"application/json"}});
