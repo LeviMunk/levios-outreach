@@ -199,7 +199,7 @@
   const workspaceRecords = view => state.records.filter(r=>view==='business'?['Business','Collaboration'].includes(r.type):r.type===workspaceType(view));
 
   const MIN_JOB_SCORE=75;
-  const jobMeetsThreshold=rec=>rec.type!=='Career'||rankOpportunity(rec).score>=MIN_JOB_SCORE;
+  const jobMeetsThreshold=rec=>rec.type!=='Career'||(!['high','workday'].includes(rec.applicationFriction)&&rankOpportunity(rec).score>=MIN_JOB_SCORE);
   const firstName=full=>String(full||'').trim().split(/\s+/)[0]||'';
   function businessDraft(rec){
     const company=String(rec.name||'this business').trim(),contact=firstName(rec.person);
