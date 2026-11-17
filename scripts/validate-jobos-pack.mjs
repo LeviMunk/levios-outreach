@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {pathToFileURL} from 'node:url';
 import {validateResearchPack} from './validate-research-pack.mjs';
 const date=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&v<=new Date().toISOString().slice(0,10);
-const url=v=>{try{const x=new URL(v);return x.protocol==='https:'&&['job-boards.greenhouse.io','boards.greenhouse.io','jobs.lever.co'].includes(x.hostname.toLowerCase())}catch{return false}};
+const url=v=>{try{const x=new URL(v);return x.protocol==='https:'&&['job-boards.greenhouse.io','job-boards.eu.greenhouse.io','boards.greenhouse.io','boards.eu.greenhouse.io','jobs.lever.co'].includes(x.hostname.toLowerCase())}catch{return false}};
 export function validateMixed(pack){
  const errors=[];
  if(!pack||!Array.isArray(pack.records)||!pack.records.length||pack.records.length>12)return {valid:false,errors:['Expected 1–12 records']};
