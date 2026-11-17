@@ -18,6 +18,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Test sourcing and intake validation
+        run: node scripts/test-jobos-intake.mjs
       - name: Discover source-backed local and remote jobs
         run: node scripts/discover-jobs.mjs
       - name: Discover business prospects on Mondays
