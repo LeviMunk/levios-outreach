@@ -528,9 +528,10 @@ async function saveStrategy(e){
     // Preserve verified record type. The server gate permits only sourced Career and Business research.
     // Always strip outbound fields: research is never a send, application, or message approval.
     const rows=pack.records.map(r=>{
-      if(!r||!['Business','Career'].includes(r.type))throw Error('Unsupported research record category.');
+      if(!r||!['Business','Career','Career Outreach'].includes(r.type))throw Error('Unsupported research record category.');
       if(!safeUrl(r.sourceUrl)||!r.researchDate)throw Error('Research source or date missing.');
       if(r.type==='Career'&&(!safeUrl(r.jobUrl)||r.verification!=='official-site'))throw Error('Career posting missing a verified source.');
+      if(r.type==='Career Outreach'&&(!safeUrl(r.profile)||r.contactVerified!=='public-profile'||!r.person))throw Error('Career Outreach requires a named public professional contact.');
       return {...r,stage:r.type==='Career'?'Discovered':'Researched',draft:'',subject:'',cc:'',followup:''};
     });
     return mergeImport(rows,pack.strategies||[],{automatic:true});
