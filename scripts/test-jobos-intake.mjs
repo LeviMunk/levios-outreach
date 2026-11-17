@@ -7,6 +7,8 @@ const local=candidate({...base,location:'Appleton, WI'},stamp);
 assert.ok(local,'Verified Appleton record should qualify');
 assert.equal(local.locationBucket,'local20');
 assert.ok(validateMixed({records:[local],strategies:[]}).valid,'Local record must pass server-like research validation');
+assert.equal(validateMixed({records:[{...local,applicationFriction:'high'}]}).valid,false,'High-friction jobs must be excluded even if 75+');
+assert.equal(validateMixed({records:[{...local,compensationFit:'unknown'}]}).valid,false,'Unknown pay and friction cannot artificially exceed 75');
 assert.equal(candidate({...base,location:'Green Bay, WI'},stamp),null,'Outside Appleton radius cannot qualify as local');
 const remote=candidate({...base,location:'Remote - US'},stamp);
 assert.ok(remote,'Remote role with explicit US-wide eligibility should qualify');
