@@ -43,7 +43,7 @@
   const workdaysFrom = (start,amount) => {let d=new Date(`${start}T12:00:00`),left=amount;while(left>0){d.setDate(d.getDate()+1);if(d.getDay()!==0&&d.getDay()!==6)left--;}return isoLocal(d);};
   const isActive = r => !r.optedOut&&r.intakeReview!=='passed'&&r.intakeReview!=='rejected'&&!['Closed','Won','Rejected','Withdrawn'].includes(r.stage);
   const isDue = r => isActive(r)&&r.followup&&r.followup<=today();
-  const isReady = r => !r.optedOut&&r.intakeReview!=='passed'&&r.intakeReview!=='rejected'&&r.draft?.trim()&&!['Contacted','Responded','Concept Shared','Interested','Meeting Booked','Proposal','Won','Closed'].includes(r.stage);
+  const isReady = r => !r.optedOut&&r.intakeReview!=='passed'&&r.intakeReview!=='rejected'&&(r.type!=='Career'||jobMeetsThreshold(r))&&r.draft?.trim()&&!['Contacted','Responded','Concept Shared','Interested','Meeting Booked','Proposal','Won','Closed'].includes(r.stage);
   const isSent = rec => state.activities.some(a=>a.recordId===rec.id&&a.kind==='sent');
   const isReply = rec => state.activities.some(a=>a.recordId===rec.id&&a.kind==='replied');
   const humanReplyEvent = rec => state.activities.find(a=>a.recordId===rec.id&&a.kind==='replied');
