@@ -60,6 +60,6 @@ if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
   const records=await discover();
   if(!records.length)throw Error('No eligible directory prospects. Refusing empty research batch.');
   mkdirSync('research-output',{recursive:true});
-  writeFileSync('research-output/candidates.json',JSON.stringify({records,strategies:[]},null,2));
+  writeFileSync('research-output/business.json',JSON.stringify({records,strategies:[]},null,2));
   console.log(`Collected ${records.length} directory-sourced candidates for review (no emails).`);
 }
