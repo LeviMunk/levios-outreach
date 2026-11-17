@@ -1,3 +1,20 @@
+## JobOS v0.4 · Four-workspace operating system (Nov 17, 2026)
+
+- **Employment:** employer-hosted job listings must achieve at least 75/100 using the shared rubric. High-friction/Workday submissions are excluded even when otherwise well matched. Local Fox Valley jobs get first priority, then confirmed Wisconsin-eligible remote jobs. Missing salary, application friction, and recruiter details remain explicitly unverified.
+- **Career Outreach:** speculative employer contact is distinct from a posted job application, with its own record type, outreach draft and pipeline. Nothing is sent automatically.
+- **MunkOS:** newly imported Business research receives a short, editable email subject and body based on its company, industry and relevant MunkOS/CleaningOS module. This is a **deterministic first-draft template, not a live LLM-generated individualized audit**. It does not invent business problems or contacts. Direct Gmail drafts still require an actual verified email address and message approval.
+- **Networking:** retains professional relationship outreach, response tracking and follow-ups.
+- **Generate resume / cover letter:** currently logs a job-specific package request, copies a factual ChatGPT instruction to clipboard and opens ChatGPT. No server-side DOCX/PDF generation occurs in JobOS; the finished documents must be created in ChatGPT or another connected document capability and their links saved on the record. Do not mark the job applied merely because the user clicked this button.
+- **After you confirm applying:** if a named recruiter/hiring contact has an appropriately verified email or professional profile, JobOS prepares a brief post-application email or LinkedIn draft. It is *not* sent without the normal explicit approval process. If no contact is verified, JobOS offers a person-search link labeled unverified, not a fabricated contact.
+- **Editing feedback:** draft changes are recorded in the user's encrypted activity ledger, with both versions available for future strategy analysis. The tool shows revision counts but does not currently use these to automatically train a model.
+- **Job research:** the direct GitHub Actions discovery feed and OIDC-gated Supabase Edge Function both reject under-75 jobs and high-friction/Workday records; previously staged under-threshold records remain separate historical queue entries until the browser processes or skips them. Do not claim the automatic ATS feed surveys the whole job market; it currently uses a limited source registry. The ChatGPT weekday research task searches more broadly but must verify any real database write.
+
+### Important caveats
+
+The JobOS static site cannot itself directly call ChatGPT to author a DOCX or PDF, search private LinkedIn profiles, or guarantee an email contact on every listing. The workflows distinguish generated **drafts** from verified **sends**, requested ATS work from finished artifacts, and researched candidates from submitted applications.
+
+---
+
 
 ## Local-first scored recommendations and Pass feedback (Nov 17, 2026)
 - Source-backed imports with a valid job listing URL (for Career), `verification: "official-site"` and `researchDate`, or sourced business records marked `official-site`/`directory`, enter the **Recommended** queue without a manual verification approval step. Claims in uploaded research packs are not independently audited by the browser, so the research producer must validate the underlying source first. Other records stay in **Needs more research**.
