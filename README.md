@@ -1,3 +1,25 @@
+# JobOS · Unified Opportunity Command Center
+
+JobOS is the next iteration of LeviOS Outreach, using the existing encrypted vault, Gmail bridge, Supabase configuration, and outreach records. The source repository deliberately retains its existing name so deployed URLs, integrations and browser storage are not disrupted.
+
+## JobOS workspaces (initial UI deployed to source)
+- **Dashboard:** cross-workspace totals, confirmed application stages, confirmed sends, follow-ups due and recent activity.
+- **Employment:** career records with job title, posting URL, compensation and application date, plus a career-stage Kanban.
+- **Business Development:** prospecting, consulting opportunities, business pipeline.
+- **Networking:** professional relationships and a distinct networking pipeline.
+- **Shared tools:** Messages, all records, aggregate pipelines, follow-ups, insights and Strategy Lab.
+
+**Current limitations:** No live job-search connector in the application yet; the separate LeviOS Career SQLite database has not been migrated; new career records must be entered or imported through existing approved workflows. Current status counts are based on saved records, not externally verified application submissions. Existing Gmail draft and reply review features remain assisted, not automatic sends. The app remains a single-user prototype. Test with a backup of your encrypted vault before modifying important records.
+
+## Recommended migration path
+1. Verify current deployed Pages URL and smoke-test unlock, records, browser backup, Gmail drafting and mobile navigation.
+2. Export/backup the separate LeviOS Career SQLite database; create an explicit, validated, idempotent import adapter for JobOS career records.
+3. Add provenance-backed job discovery inbox with deduplication by posting URL + organization + role, expiration, region eligibility and user review.
+4. Normalize organizations, contacts, opportunity types, application events and activities, while protecting private data; keep cloud-authorized ingestion separate from the encrypted vault.
+5. Introduce follow-up rules and recruiter-thread association with human approval and suppression controls.
+
+---
+
 # LeviOS Outreach · v0.3 (Strategy Lab + Gmail reply review)
 
 A working encrypted, offline-first outreach command-center app. Its original browser-local mode still works independently; the opt-in Supabase cloud synchronization and Gmail bridge are configured for the owner. A separate Google OAuth authorization is still required on each new authorization cycle.
