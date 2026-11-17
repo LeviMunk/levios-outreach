@@ -14,5 +14,5 @@ const body=JSON.stringify({records:pack.records.slice(0,12),strategies:[]});
 const response=await fetch(intake,{method:'POST',headers:{Authorization:'Bearer '+token,'content-type':'application/json'},body,signal:AbortSignal.timeout(30000)});
 if(!response.ok)throw Error('Authenticated research intake returned '+response.status);
 const result=await response.json();
-writeFileSync('research-output/report.json',JSON.stringify({...result,source:'OpenStreetMap directory; confirm each lead before outreach'},null,2));
+writeFileSync('research-output/report.json',JSON.stringify({...result,source:'Employer-hosted job boards and sourced public business directory; no outbound messages'},null,2));
 console.log(`Research inbox: ${result.staged} staged, ${result.skipped} skipped. No outbound messages.`);
