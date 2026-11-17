@@ -5,8 +5,7 @@
 import {writeFileSync,mkdirSync} from 'node:fs';
 const ENDPOINT='https://overpass.kumi.systems/api/interpreter';
 const box={
-  Madison:[43.018,-89.49,43.16,-89.29],
-  Milwaukee:[42.94,-88.04,43.12,-87.87]
+  'Fox Cities':[44.13,-88.55,44.34,-88.27]
 };
 const categories={office:'Professional services',shop:'Retail services',craft:'Trades and contractors',amenity:'Local services'};
 const today=()=>new Date().toISOString().slice(0,10);
@@ -23,11 +22,12 @@ export function candidate(element,city,stamp=today()){
   const websiteHost=host(site);
   if(!websiteHost||/(facebook|instagram|linktr.ee|yelp|google|wixsite|wordpress|maps\.apple)\./i.test(websiteHost))return null;
   const category=String(t[kind]).replace(/_/g,' ').slice(0,64);
-  const industry=kind==='office'?'Professional services':kind==='craft'?'Trades and contractors':kind==='shop'?'Retail services':'Local services';
+  const cleaning=/clean(?:er|ing|ers)?|maid|housekeep|janitorial|carpet wash|window wash|power wash|pressure wash/i.test([name,category,t.shop,t.amenity,t.office,t.craft].join(' '));
+  const industry=cleaning?'Cleaning Services':kind==='office'?'Professional services':kind==='craft'?'Trades and contractors':kind==='shop'?'Retail services':'Local services';
   return {name,type:'Business',industry,location:city+', WI',website:site,email:'',channel:'Email',
-    stage:'Researched',sourceUrl:`https://www.openstreetmap.org/${element.type}/${element.id}`,
-    researchDate:stamp,verification:'directory',angle:`Explore whether a ${category} business could benefit from faster inquiry follow-up, conversion measurement, or customer reactivation; no site defect has been established.`,
-    notes:'Discovered via OpenStreetMap public tags. Business website and suitability require manual confirmation before outreach. © OpenStreetMap contributors; openstreetmap.org/copyright.'};
+    stage:'Researched',sourceUrl:`https://www.openstreetmap.org/${element.type}/${element.id}`,offerModule:cleaning?'CleaningOS · Rebooking / Reactivation':'MunkOS · Inquiry Follow-up',
+    researchDate:stamp,verification:'directory',angle:cleaning?'Hypothesis: repeat-booking reminders and customer reactivation may be valuable for cleaning services. No actual rebooking problem has been established.':`Explore whether a ${category} business could benefit from faster inquiry follow-up, conversion measurement, or customer reactivation; no site defect has been established.`,
+    notes:'Discovered via OpenStreetMap public tags in the Fox Cities region. Business website and suitability are directory evidence, not verified decision-maker contact information. © OpenStreetMap contributors; openstreetmap.org/copyright.'};
 }
 function query() {
   // Small, bounded queries once weekly; do not request contacts or private personal data.
@@ -53,7 +53,7 @@ export async function discover({fetcher=fetch,stamp=today()}={}){
     }
     const seen=new Set();
     return items.filter(x=>{const key=x.name.toLowerCase()+'|'+host(x.website);if(seen.has(key))return false;seen.add(key);return true;})
-      .sort((a,b)=>a.name.localeCompare(b.name)).slice(0,40);
+      .sort((a,b)=>Number(b.industry==='Cleaning Services')-Number(a.industry==='Cleaning Services')||a.name.localeCompare(b.name)).slice(0,40);
   }finally{clearTimeout(timeout)}
 }
 if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
