@@ -13,7 +13,7 @@ const SOURCES=[
 // Approximate city-centre straight-line distances, NOT exact workplace or driving distances.
 // Conservatively include only cities safely inside a 20-mile radius.
 const MILES={appleton:0,menasha:4.3,neenah:6.2,kimberly:3.8,'little chute':5,kaukauna:9.2,'grand chute':4,greenville:8,'combined locks':5.6,'fox crossing':7,darboy:6,sherwood:11.9};
-const TITLE=/automation analyst|business (?:systems? )?analyst|business intelligence|marketing (?:data |performance |operations |analytics |insights |strategy )?(?:analyst|specialist|coordinator|strategist|manager)|revenue operations|crm (?:analyst|specialist|manager)|customer insights|growth analyst|social media (?:manager|strategist|analyst)|digital marketing (?:analyst|strategist|manager)/i;
+const TITLE=/automation analyst|business (?:systems? )?analyst|business intelligence|marketing (?:ops |data |performance |operations |analytics |insights |strategy )?(?:analyst|specialist|coordinator|strategist|manager)|revenue operations|crm (?:analyst|specialist|manager)|customer insights|growth analyst|social media (?:manager|strategist|analyst)|digital marketing (?:analyst|strategist|manager)/i;
 const EXCLUDE=/internship|vice president|head of |executive director|merchandis|insurance agent|sales representative/i;
 const clean=h=>String(h||'').replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/\s+/g,' ');
 const website=u=>{try{const x=new URL(u);return x.protocol==='https:'&&['job-boards.greenhouse.io','job-boards.eu.greenhouse.io','boards.greenhouse.io','boards.eu.greenhouse.io','jobs.lever.co'].includes(x.hostname.toLowerCase())}catch{return false}};
@@ -24,7 +24,7 @@ function place(location,body){
   if(rx.test(l))return {locationBucket:'local20',distanceMiles:String(miles),remoteWisconsinEligible:'',local:true};
  }
  const remote=/\bremote\b/i.test(l)&&/\b(us|usa|u\.s\.|united states)\b/i.test(l);
- const eligible=/anywhere (?:in|within) (?:the )?(?:united states|u\.s\.|usa)|all 50 states|any (?:us|u\.s\.) state/i.test(d);
+ const eligible=/anywhere (?:in|within) (?:the )?(?:united states|u\.s\.|usa)|all 50 states|any (?:us|u\.s\.) state|fully distributed company/i.test(d);
  const exclusion=/(?:except|excluding|not available in|cannot hire in).{0,150}wisconsin/i.test(d);
  return remote&&eligible&&!exclusion?{locationBucket:'remote',distanceMiles:'',remoteWisconsinEligible:'yes',local:false}:null;
 }
@@ -52,7 +52,7 @@ export function candidate(job,day=new Date().toISOString().slice(0,10)){
   location:String(job.location).slice(0,120),...geo,roleFit:'strong',applicationFriction:'',...pay,
   channel:'Email',email:'',person:'',draft:'',subject:'',cc:'',followup:'',
   angle:'Employer-hosted application. Review requirements and application form.',
-  notes:'Source: public employer ATS. Local distance is approximate city-centre straight-line miles, not driving distance.'};
+  notes:'Source: public employer ATS. Local distances are approximate straight-line city-center miles. For nationwide remote postings, US eligibility is inferred from employer wording; specific Wisconsin eligibility should be reconfirmed before submitting.'};
 }
 export async function discover(fetcher=fetch){
  const output=[],errors=[];
