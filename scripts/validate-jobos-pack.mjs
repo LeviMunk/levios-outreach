@@ -7,9 +7,13 @@ const url=v=>{try{const x=new URL(v);return x.protocol==='https:'&&['job-boards.
 export function validateMixed(pack){
  const errors=[];
  if(!pack||!Array.isArray(pack.records)||!pack.records.length||pack.records.length>12)return {valid:false,errors:['Expected 1–12 records']};
- const businesses=pack.records.filter(r=>r?.type==='Business'),jobs=pack.records.filter(r=>r?.type==='Career');
+ const businesses=pack.records.filter(r=>r?.type==='Business'),jobs=pack.records.filter(r=>r?.type==='Career'),employerOutreach=pack.records.filter(r=>r?.type==='Career Outreach');
  if(businesses.length){const check=validateResearchPack({records:businesses,strategies:[]});errors.push(...check.errors);}
- if(businesses.length+jobs.length!==pack.records.length)errors.push('Unsupported record type');
+ if(businesses.length+jobs.length+employerOutreach.length!==pack.records.length)errors.push('Unsupported record type');
+ for(const [i,r] of employerOutreach.entries()){
+  const profile=url(r.profile),site=url(r.website),source=url(r.sourceUrl);
+  if(r.stage!=='Researched'||!r.name||!r.person||r.contactVerified!=='public-profile'||r.verification!=='official-site'||!site||!source||site.hostname.replace(/^www\./,'')!==source.hostname.replace(/^www\./,'')||!profile||!/^((www)\.)?linkedin\.com$/i.test(profile.hostname)||!date(r.researchDate)||r.email||r.draft||r.subject||r.cc||r.followup)errors.push('Career Outreach '+i+': public employer and professional contact evidence required');
+ }
  const seen=new Set();
  for(const [i,r] of jobs.entries()){
   if(!r||!r.name||!r.jobTitle||!url(r.jobUrl)||r.jobUrl!==r.sourceUrl||r.verification!=='official-site'||!date(r.researchDate)||r.stage!=='Discovered')errors.push('Career '+i+': source/job metadata invalid');
