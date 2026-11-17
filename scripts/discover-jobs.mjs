@@ -35,6 +35,14 @@ function compensation(body){
  if(a<40000||a>250000||b<a)return {salary:'',compensationFit:'unknown'};
  return {salary:'$'+a.toLocaleString('en-US')+'–$'+b.toLocaleString('en-US'),compensationFit:a>=75000?'target':b>=60000?'minimum':'below'};
 }
+export function scoreCareer(r){
+ const location=r.locationBucket==='local20'&&r.distanceMiles!==''&&Number(r.distanceMiles)<=20?30:r.locationBucket==='remote'&&r.remoteWisconsinEligible==='yes'?22:0;
+ const role=r.roleFit==='strong'?25:r.roleFit==='moderate'?15:0;
+ const pay=r.compensationFit==='target'?20:r.compensationFit==='minimum'?12:0;
+ const friction=r.applicationFriction==='low'?15:r.applicationFriction==='medium'?7:0;
+ const evidence=r.verification==='official-site'&&r.jobUrl===r.sourceUrl?10:0;
+ return location+role+pay+friction+evidence;
+}
 export function candidate(job,day=new Date().toISOString().slice(0,10)){
  if(!job||!website(job.url)||!TITLE.test(job.title||'')||EXCLUDE.test(job.title||''))return null;
  const geo=place(job.location,job.body);if(!geo)return null;
@@ -57,18 +65,18 @@ export async function discover(fetcher=fetch){
    if(!Array.isArray(jobs))throw Error('not a job list');
    for(const x of jobs.slice(0,1000)){
     const job=kind==='gh'?{company,title:x.title,location:x.location?.name||'',body:clean(x.content),url:x.absolute_url}:{company,title:x.text,location:x.categories?.location||'',body:clean(x.descriptionPlain||x.description),url:x.hostedUrl};
-    const record=candidate(job);if(record)output.push(record);
+    const record=candidate(job);if(record&&scoreCareer(record)>=75)output.push(record);
    }
   }catch(e){errors.push(slug+': '+e.message)}
  }
  const seen=new Set();
  const records=output.filter(r=>{const k=r.jobUrl.split('?')[0].toLowerCase();if(seen.has(k))return false;seen.add(k);return true})
-  .sort((a,b)=>Number(b.locationBucket==='local20')-Number(a.locationBucket==='local20')||Number(b.compensationFit==='target')-Number(a.compensationFit==='target')).slice(0,12);
+  .sort((a,b)=>Number(b.locationBucket==='local20')-Number(a.locationBucket==='local20')||scoreCareer(b)-scoreCareer(a)).slice(0,12);
  return {records,errors,sources:SOURCES.length};
 }
 if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
  const r=await discover();mkdirSync('research-output',{recursive:true});
  writeFileSync('research-output/jobs.json',JSON.stringify({records:r.records,strategies:[]},null,2));
  writeFileSync('research-output/job-report.json',JSON.stringify({sources:r.sources,qualified:r.records.length,errors:r.errors},null,2));
- console.log('JobOS: '+r.sources+' employer boards checked, '+r.records.length+' qualified matches, '+r.errors.length+' source errors.');
+ console.log('JobOS: '+r.sources+' employer boards checked, '+r.records.length+' matches at least 75/100, '+r.errors.length+' source errors.');
 }
