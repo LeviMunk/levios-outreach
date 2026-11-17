@@ -1,19 +1,19 @@
 // JobOS public employer-hosted job feed. No login, applications, or outbound communication.
 import {mkdirSync,writeFileSync} from 'node:fs';
 const SOURCES=[
- ['gh','cafortune','C.A. Fortune'],['gh','bestversionmedia','Best Version Media'],
+ ['gh','michelscorporation','Michels Corporation'],['gh','maxcessinternational','Maxcess International'],['gh','cafortune','C.A. Fortune'],['gh','bestversionmedia','Best Version Media'],
  ['gh','horacemannagents','Horace Mann'],['lever','ppwi','Planned Parenthood of Wisconsin'],
  ['lever','allegiantair','Allegiant Air'],['gh','twilio','Twilio'],
  ['gh','algolia','Algolia'],['gh','medispend','MediSpend'],
  ['gh','guidelighthealth','Guidelight Health'],['gh','harrowhealth','Harrow'],
  ['gh','oneimaging','OneImaging'],['gh','talkdesk2','Talkdesk'],
- ['gh','gomotive','Motive'],['gh','mergeworld','MERGE'],
+ ['gh','gomotive','Motive'],['gh','newsela','Newsela'],['gh','honeycomb','Honeycomb'],['gh','supplyhouse','SupplyHouse.com'],['gh','muckrack','Muck Rack'],['gh','peoplefinders','PeopleFinders'],['gh','mergeworld','MERGE'],
  ['gh','surgerypartners','Surgery Partners'],['gh','reddit','Reddit'],['gh','mercury','Mercury']
 ];
 // Approximate city-centre straight-line distances, NOT exact workplace or driving distances.
 // Conservatively include only cities safely inside a 20-mile radius.
 const MILES={appleton:0,menasha:4.3,neenah:6.2,kimberly:3.8,'little chute':5,kaukauna:9.2,'grand chute':4,greenville:8,'combined locks':5.6,'fox crossing':7,darboy:6,sherwood:11.9};
-const TITLE=/business (?:systems? )?analyst|business intelligence|marketing (?:data |performance |operations |analytics |insights |strategy )?(?:analyst|specialist|coordinator|strategist|manager)|revenue operations|crm (?:analyst|specialist|manager)|customer insights|growth analyst|social media (?:manager|strategist|analyst)|digital marketing (?:analyst|strategist|manager)/i;
+const TITLE=/automation analyst|business (?:systems? )?analyst|business intelligence|marketing (?:data |performance |operations |analytics |insights |strategy )?(?:analyst|specialist|coordinator|strategist|manager)|revenue operations|crm (?:analyst|specialist|manager)|customer insights|growth analyst|social media (?:manager|strategist|analyst)|digital marketing (?:analyst|strategist|manager)/i;
 const EXCLUDE=/internship|vice president|head of |executive director|merchandis|insurance agent|sales representative/i;
 const clean=h=>String(h||'').replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/\s+/g,' ');
 const website=u=>{try{const x=new URL(u);return x.protocol==='https:'&&['job-boards.greenhouse.io','boards.greenhouse.io','jobs.lever.co'].includes(x.hostname.toLowerCase())}catch{return false}};
