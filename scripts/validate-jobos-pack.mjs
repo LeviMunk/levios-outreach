@@ -21,7 +21,7 @@ export function validateMixed(pack){
   const role=r.roleFit==='strong'?25:r.roleFit==='moderate'?15:0;
   const pay=r.compensationFit==='target'?20:r.compensationFit==='minimum'?12:0;
   const ease=r.applicationFriction==='low'?15:r.applicationFriction==='medium'?7:0;
-  if(location+role+pay+ease+10<75)errors.push('Career '+i+': below 75-point minimum');
+  if(location+role+pay+ease+10<75||['high','workday'].includes(r.applicationFriction))errors.push('Career '+i+': below 75-point minimum or high-friction application');
 
   if(r.email||r.draft||r.subject||r.cc||r.followup)errors.push('Career '+i+': outbound data not allowed');
   const key=String(r.jobUrl||'').split('?')[0].toLowerCase();if(seen.has(key))errors.push('Duplicate career URL');seen.add(key);
