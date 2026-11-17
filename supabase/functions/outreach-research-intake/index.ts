@@ -73,9 +73,26 @@ function validCareer(r){
  const ease=r.applicationFriction==="low"?15:r.applicationFriction==="medium"?7:0;
  return (local||remote)&&!["high","workday"].includes(r.applicationFriction)&&location+role+pay+ease+10>=75;
 }
-function validRecord(r){return validBusiness(r)||validCareer(r)}
+function validCareerOutreach(r){
+ if(!r||typeof r!=="object"||Array.isArray(r)||
+ r.type!=="Career Outreach"||r.stage!=="Researched"||
+ r.verification!=="official-site"||!r.name||typeof r.name!=="string"||
+ r.name.length>150||typeof r.person!=="string"||r.person.trim().length<3||
+ r.person.length>120||r.contactVerified!=="public-profile"||
+ typeof r.website!=="string"||!isUrl(r.website)||
+ typeof r.sourceUrl!=="string"||!isUrl(r.sourceUrl)||
+ host(r.website)!==host(r.sourceUrl)||
+ typeof r.profile!=="string"||!isUrl(r.profile)||
+ !new URL(r.profile).hostname.toLowerCase().match(/^(www\.)?linkedin\.com$/)||
+ !/^\d{4}-\d{2}-\d{2}$/.test(r.researchDate||"")||
+ r.researchDate>new Date().toISOString().slice(0,10)||
+ r.email||r.draft||r.subject||r.cc||r.followup)return false;
+ return true;
+}
+function validRecord(r){return validBusiness(r)||validCareer(r)||validCareerOutreach(r)}
 function identityKey(r){
  if(r.type==="Career"){try{const u=new URL(r.jobUrl);return "career|"+u.origin+u.pathname.replace(/\/$/,"").toLowerCase()}catch{return "invalid"}}
+ if(r.type==="Career Outreach")return "careeroutreach|"+host(r.website)+"|"+String(r.person||"").trim().toLowerCase();
  return "business|"+r.name.trim().toLowerCase()+"|"+host(r.website);
 }
 const headers=(key)=>({apikey:key,Authorization:"Bearer "+key,"content-type":"application/json"});
