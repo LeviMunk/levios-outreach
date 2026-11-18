@@ -6,6 +6,8 @@ on:
       - 'supabase/functions/outreach-research-intake/**'
       - '.github/workflows/jobos-ci.yml'
       - 'app.js'
+      - 'job-documents.js'
+      - 'tests/**'
       - 'cloud.js'
   workflow_dispatch:
 permissions:
@@ -22,10 +24,14 @@ jobs:
       - name: Syntax checks
         run: |
           node --check app.js
+          node --check job-documents.js
           node --check cloud.js
           node --check scripts/discover-jobs.mjs
           node --check scripts/validate-jobos-pack.mjs
           node --check scripts/combine-research.mjs
           node --check scripts/submit-oidc-research.mjs
       - name: Contract tests
-        run: node scripts/test-jobos-intake.mjs
+        run: |
+          node scripts/test-jobos-intake.mjs
+          node tests/invariants.mjs
+          node tests/document-downloads.test.mjs
