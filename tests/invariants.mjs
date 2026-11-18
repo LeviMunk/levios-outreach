@@ -73,7 +73,7 @@ assert.doesNotMatch(app.slice(app.indexOf('function workspace(view)'),app.indexO
 assert.match(app,/const cards=filtered\(\)\.filter\(r=>!isSent\(r\)/);
 assert.match(app,/Removed from active outreach/);
 assert.match(app,/subject:'Applied for '\+role\+' at '\+rec\.name/);
-assert.match(app,/if\(!r\.appliedDate\)return notify\('Confirm your job application before opening a recruiter email/);
+assert.match(app,/if\(!r\|\|r\.type!=='Career'\|\|!r\.appliedDate\)return notify\('Confirm your job application before opening a recruiter email/);
 assert.match(app,/const recruiterPanel=career&&r\.appliedDate&&recruiter/);
 assert.match(documents,/if\(!key\|\|!rec\?\.appliedDate\)return null/);
 assert.match(documents,/subject:'Applied for '\+role\+' at '\+organization/);
