@@ -456,6 +456,16 @@
     }).join('');
     return '<section class="card research-preview-panel"><div class="card-head"><h2>Research Inbox · '+filteredAll.length+' qualified waiting</h2><button class="button button-primary button-small" data-action="researchsync">Sync opportunities</button></div><p class="small subtle">'+escapeHtml(notice)+(belowThreshold?' · '+belowThreshold+' job(s) held below 75.':'')+(stillResearching?' · '+stillResearching+' business contacts need email/social research.':'')+'</p>'+(items.length?'<div class="research-preview-list">'+cards+'</div>':all.length&&scope!=='all'?'<p class="small subtle">No queued items in this workspace. '+all.length+' waiting overall.</p>':'')+'<button class="button button-secondary button-small" data-action="researchsetup">Cloud & Gmail settings</button></section>';
   }
+  function vaultConnectionBanner(){
+    const total=state.records.length,career=state.records.filter(r=>r.type==='Career').length;
+    const cloudState=window.JobOSResearchPreview?.state||'unknown';
+    if(career>0)return '';
+    const message=total
+      ?'This browser vault has '+total+' saved record(s), but no career records. Jobs may be in another browser or cloud vault, or they may need to be imported.'
+      :'This browser vault has no saved opportunities. Previously imported cloud research does not automatically appear in a different or unlinked encrypted vault.';
+    const status=cloudState==='linked'?'Cloud reports linked. Check the research feed and refresh; do not overwrite your vault.':cloudState==='unlinked'?'Cloud is not linked to this browser vault. Restore or reconcile carefully using Cloud & Gmail.':cloudState==='signed_out'?'Sign in under Cloud & Gmail to check whether an existing encrypted backup is available.':cloudState==='locked'?'Unlock your existing encrypted vault to continue.':'Check Cloud & Gmail connection and backup status.';
+    return '<section class="card" style="margin:16px 0"><h2>No career jobs in this browser vault</h2><p>'+escapeHtml(message)+'</p><p class="small subtle">'+escapeHtml(status)+'</p><div class="inline-actions"><button class="button button-primary button-small" data-action="researchsetup">Cloud & Gmail · check existing vault</button><button class="button button-secondary button-small" data-action="retryjobfeed">Refresh public job feed</button></div><p class="small subtle">Do not reset your passphrase or replace a cloud vault without an encrypted backup. Importing public listings cannot restore private application history.</p></section>';
+  }
   function overview(){
     const active=state.records.filter(r=>!isPassed(r)),career=active.filter(r=>r.type==='Career'&&(jobMeetsThreshold(r)||!!r.appliedDate)),due=active.filter(r=>isDue(r)&&munkosContactReady(r));
     const group=[['Employment','career'],['Career Outreach','careeroutreach'],['MunkOS','business'],['Networking','networking']];
@@ -465,7 +475,7 @@
     const feed=window.JobOSResearchPreview;
     const staged=Array.isArray(feed?.records)?feed.records.filter(r=>(r.type!=='Career'||jobMeetsThreshold(r))&&cleaningFarEnough(r)):[];
     const waiting=staged.length?'<section class="simple-new-inbox card"><div><div class="eyebrow">NEW RESEARCH</div><h2>'+staged.length+' opportunities found for you</h2><p>'+staged.filter(r=>r.type==='Career').length+' qualifying jobs · '+staged.filter(r=>r.type==='Business').length+' MunkOS prospects · Ready to bring into your workspace</p></div><button class="button button-primary" data-action="researchsync">Add to JobOS</button></section>':'';
-    return waiting+starterJobsPanel()+'<div class="simple-metrics">'+metricCard('Jobs to review',pending.length,'Verified 75+ listings')+metricCard('Messages sent',active.filter(isSent).length,'Confirmed')+metricCard('Replies',active.filter(isReply).length,'Tracked responses')+metricCard('Follow-ups',due.length,'Due now')+'</div>'+
+    return waiting+vaultConnectionBanner()+starterJobsPanel()+'<div class="simple-metrics">'+metricCard('Jobs to review',pending.length,'Verified 75+ listings')+metricCard('Messages sent',active.filter(isSent).length,'Confirmed')+metricCard('Replies',active.filter(isReply).length,'Tracked responses')+metricCard('Follow-ups',due.length,'Due now')+'</div>'+
       '<div class="simple-section"><div class="simple-section-head"><h2>Your next actions</h2><span>'+actions.length+' opportunities</span></div>'+
       (actions.length?'<div class="simple-list">'+actions.map(simplifiedCard).join('')+'</div>':'<div class="card simple-empty"><h3>Nothing requiring action yet</h3><p>Open a workspace to review contacts, or see research updates below.</p></div>')+'</div>'+
       careerInboxPanel()+
