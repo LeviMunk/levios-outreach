@@ -483,23 +483,17 @@
     const proposedSubject=prepared?r.subject:(r.type==='Business'?businessDraft(r).subject:r.type==='Career Outreach'?generalEmploymentDraft(r).subject:'');
     const available=!!destinationFor(r),already=isSent(r),approved=isApproved(r)&&messageIsApproved(r);
     const email=r.channel==='Email',needsRecipient=email&&!validMail(r.email);
-    const status=!prepared?'Draft suggested · save or edit before approving':!approved?'Draft saved · awaiting your approval':'Approved draft · ready to open';
+    const status=already?'Sent':validMail(r.email)?'Ready for Gmail':'Verified recipient needed';
     return '<article class="card opportunity"><div class="top"><div><div class="eyebrow">'+escapeHtml(r.type)+' · '+escapeHtml(r.channel)+'</div><h3>'+escapeHtml(r.name)+'</h3><p class="subtitle">'+escapeHtml([r.industry,r.location].filter(Boolean).join(' · ')||'No location added')+'</p></div><span class="badge '+stageBadge(r.stage)+'">'+escapeHtml(r.stage)+'</span></div>'+
       (r.sourceUrl?'<p class="small subtle">Research source: <a target="_blank" rel="noopener noreferrer" href="'+escapeHtml(safeUrl(r.sourceUrl)||'#')+'">View evidence ↗</a></p>':'')+
       '<p class="small subtle">'+escapeHtml(status)+'</p>'+
       (proposedSubject?'<div class="draft-subject"><strong>Subject:</strong> '+escapeHtml(proposedSubject)+'</div>':'')+
       '<div class="draft-preview">'+escapeHtml(preview||'No draft prepared yet. Open this opportunity to add one.')+'</div>'+
       '<div class="card-foot">'+
-      (!prepared&&preview?'<button class="button button-primary button-small" data-action="savedraft" data-id="'+escapeHtml(r.id)+'">Save suggested draft</button>':'')+
-      (prepared&&!approved?'<button class="button button-primary button-small" data-action="approvequick" data-id="'+escapeHtml(r.id)+'">Approve message</button>':'')+
-      (preview?'<button class="button button-secondary button-small" data-action="copydraft" data-id="'+escapeHtml(r.id)+'">Copy message</button>':'')+
-      (prepared&&approved&&email&&validMail(r.email)?'<button class="button button-primary button-small" data-action="gmaildraft" data-id="'+escapeHtml(r.id)+'">Create Gmail draft</button>':'')+
-      (preview&&email?'<button class="button button-secondary button-small" data-action="opencompose" data-id="'+escapeHtml(r.id)+'">Open Gmail compose</button>':'')+
-      (prepared&&approved&&!email&&available?'<button class="button button-secondary button-small" data-action="copyopen" data-id="'+escapeHtml(r.id)+'">Copy & open '+escapeHtml(r.channel)+'</button>':'')+
-      '<button class="button button-secondary button-small" data-action="edit" data-id="'+escapeHtml(r.id)+'">Edit details</button>'+
-      (prepared&&!already?'<button class="button button-secondary button-small" data-action="confirmsent" data-id="'+escapeHtml(r.id)+'">I sent it</button>':'')+
+      (!already&&validMail(r.email)?'<button class="button button-primary button-small" data-action="opencompose" data-id="'+escapeHtml(r.id)+'">Open Draft</button>':'')+
+      (!validMail(r.email)?'<span class="small subtle">Email address needed</span>':'')+
       '</div>'+
-      (needsRecipient?'<p class="small subtle">No verified recipient yet. Copy or open the draft with an empty To field, then find and enter a real address yourself. JobOS cannot send to an unknown person.</p>':'')+
+      (needsRecipient?'<p class="small subtle">No verified recipient yet. Open Draft is disabled until a real address is found.</p>':'')+
       (!available&&!email?'<p class="small subtle">Add a verified professional profile URL before opening the social conversation.</p>':'')+
       '</article>';
   }
