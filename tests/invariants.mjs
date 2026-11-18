@@ -60,4 +60,7 @@ assert.match(gmail,/format=metadata/);
 assert.match(gmail,/autoUpdated:false/);
 assert.match(discover,/distanceMiles\(lat,lon\)<50/);
 assert.match(documents,/downloadBoth/);
+assert.match(app,/function starterJobsPanel\(\)/);
+assert.match(app,/data-action="retryjobfeed"/);
+assert.match(app,/starterFeedStatus='error'/);
 console.log('LeviOS security and workflow invariants passed');
