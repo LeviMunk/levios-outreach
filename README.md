@@ -1,3 +1,12 @@
+## JobOS document download reliability (Nov 18, 2026)
+
+- Employment opportunity cards now expose a **Download both PDFs** action alongside separate résumé and cover-letter fallback buttons for reviewed packages.
+- Document activity records **download requested**, not **download completed**: browsers cannot report that a PDF was actually saved, and multi-file downloads may require user permission.
+- After one-click download, JobOS directs the user to check browser downloads and use the separate buttons if necessary. Neither download requests nor PDF generation imply an application was submitted.
+- Reviewed, job-specific packages currently cover Honeycomb and Harrow only; other listings must not be advertised as automatically generated. End-to-end browser behavior remains to be verified on the actual deployment.
+
+---
+
 ## JobOS v0.4 · Four-workspace operating system (Nov 17, 2026)
 
 - **Employment:** employer-hosted job listings must achieve at least 75/100 using the shared rubric. High-friction/Workday submissions are excluded even when otherwise well matched. Local Fox Valley jobs get first priority, then confirmed Wisconsin-eligible remote jobs. Missing salary, application friction, and recruiter details remain explicitly unverified.
