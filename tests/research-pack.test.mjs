@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {validateResearchPack} from '../scripts/validate-research-pack.mjs';
-const sample=()=>({records:[{name:'Sample Service Company',type:'Business',industry:'Home services',location:'Madison, WI',website:'https://example.com',sourceUrl:'https://example.com/about',researchDate:'2026-11-15',verification:'official-site',email:'',angle:'Potential opportunity to improve inbound lead follow-up.'}],strategies:[]});
+const sample=()=>({records:[{name:'Sample Service Company',type:'Business',industry:'Home services',location:'Madison, WI',website:'https://example.com',sourceUrl:'https://example.com/about',researchDate:'2026-11-15',verification:'official-site',email:'',profile:'https://instagram.com/samplebusiness',angle:'Potential opportunity to improve inbound lead follow-up.'}],strategies:[]});
 const check=p=>validateResearchPack(p,{today:'2026-11-15'});
 test('accepts sourced unsent business research',()=>assert.equal(check(sample()).valid,true));
 test('rejects future and malformed dates',()=>{const p=sample();p.records[0].researchDate='2026-11-31';assert.equal(check(p).valid,false);p.records[0].researchDate='2026-11-16';assert.equal(check(p).valid,false)});
