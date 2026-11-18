@@ -81,11 +81,31 @@
   async function importStarterResearch(){
     // The feed contains only public employer listings and business websites; no personal vault data.
     // Importing is local, encrypted, deduplicated and never constitutes a sent message or application.
-    const resp=await fetch('./research-feed.json?v=jobos-populated-20261117',{cache:'no-store',signal:AbortSignal.timeout(7000)});
+    const resp=await fetch('./research-feed.json?v=munkos-contactable-20261118',{cache:'no-store',signal:AbortSignal.timeout(7000)});
     if(!resp.ok)throw Error('Research feed unavailable: HTTP '+resp.status);
     const feed=await resp.json();
     if(feed?.version!==1||!Array.isArray(feed.records)||feed.records.length>30)throw Error('Research feed format invalid.');
     const sanitized=feed.records.filter(r=>r&&['Business','Career'].includes(r.type)&&r.verification==='official-site'&&safeUrl(r.sourceUrl)&&r.researchDate);
+    // Repair contact details in already-imported records: duplicate prevention must not block
+    // public email/social enrichment. Preserve any user-entered contacts and edited/sent drafts.
+    let repaired=0;
+    for(const source of sanitized.filter(r=>r.type==='Business')){
+      const existing=state.records.find(r=>r.type==='Business'&&canonical(r.website||r.sourceUrl)===canonical(source.website||source.sourceUrl)&&r.name.toLowerCase()===source.name.toLowerCase());
+      if(!existing||isSent(existing)||existing.optedOut||isPassed(existing))continue;
+      let changed=false;
+      if(!validMail(existing.email)&&validMail(source.email)){existing.email=source.email;existing.channel='Email';changed=true;}
+      if(!safeUrl(existing.profile)&&safeUrl(source.profile)){existing.profile=source.profile;changed=true;}
+      const legacy=!!existing.draft?.includes('I build practical tools for smaller companies through');
+      if((!existing.draft||legacy)&&!existing.messageApprovedAt){
+        const draft=businessDraft(existing);
+        if(existing.draft!==draft.draft||existing.subject!==draft.subject){existing.draft=draft.draft;existing.subject=draft.subject;changed=true;}
+      }
+      if(changed){
+        existing.messageApprovedAt='';existing.approvedDraft='';existing.approvedDestination='';
+        existing.updatedAt=new Date().toISOString();repaired++;
+      }
+    }
+    if(repaired){activity('','research-enriched',repaired+' existing MunkOS records enriched with verified public contact details');await persist();}
     return mergeImport(sanitized,[],{automatic:true});
   }
   async function openVault(passphrase){
