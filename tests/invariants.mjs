@@ -77,4 +77,10 @@ assert.match(app,/if\(!r\.appliedDate\)return notify\('Confirm your job applicat
 assert.match(app,/const recruiterPanel=career&&r\.appliedDate&&recruiter/);
 assert.match(documents,/if\(!key\|\|!rec\?\.appliedDate\)return null/);
 assert.match(documents,/subject:'Applied for '\+role\+' at '\+organization/);
+assert.match(app,/function recruiterRecipient\(rec,publicContact\)/);
+assert.match(app,/function recruiterEmailIsTeam\(email\)/);
+assert.match(app,/target\.personal\?'Hi '\+target\.person/);
+assert.match(app,/const cc=String\(r\.cc\|\|''\)/);
+assert.match(documents,/function recipientIsPersonal\(address\)/);
+assert.match(documents,/verifiedPerson\?'Hi '\+verifiedPerson/);
 console.log('LeviOS security and workflow invariants passed');
