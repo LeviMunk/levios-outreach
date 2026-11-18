@@ -336,7 +336,7 @@
     const suggested=rec.type==='Business'?businessDraft(rec):rec.type==='Career Outreach'?generalEmploymentDraft(rec):null;
     const draft=rec.draft||suggested?.draft||'',subject=rec.subject||suggested?.subject||'';
     const actions=career?
-      (window.JobOSDocuments?.has(rec)?'<button class="button button-primary button-small" data-action="pdfresume" data-id="'+escapeHtml(rec.id)+'">Download resume PDF</button><button class="button button-secondary button-small" data-action="pdfcover" data-id="'+escapeHtml(rec.id)+'">Download cover letter PDF</button>':'<span class="small subtle">PDF package not prepared yet</span>')+
+      (window.JobOSDocuments?.has(rec)?'<button class="button button-primary button-small" data-action="downloadkit" data-id="'+escapeHtml(rec.id)+'">Download both PDFs</button><button class="button button-secondary button-small" data-action="pdfresume" data-id="'+escapeHtml(rec.id)+'">Resume PDF</button><button class="button button-secondary button-small" data-action="pdfcover" data-id="'+escapeHtml(rec.id)+'">Cover letter PDF</button>':'<span class="small subtle">PDF package not prepared yet</span>')+
       (!applied?'<button class="button button-secondary button-small" data-action="applied" data-id="'+escapeHtml(rec.id)+'">Confirm applied</button>':'')+
       (applied&&contact?'<button class="button button-secondary button-small" data-action="recruiterdraft" data-id="'+escapeHtml(rec.id)+'">Recruiter message</button>':''):
       (!rec.draft&&suggested?'<button class="button button-primary button-small" data-action="savedraft" data-id="'+escapeHtml(rec.id)+'">Save suggested draft</button>':'')+
@@ -655,9 +655,9 @@ async function saveStrategy(e){
     if(!window.JobOSDocuments?.has(r))return notify('No prepared resume and cover letter are available for this job.');
     try{
       const names=await window.JobOSDocuments.downloadBoth(r);
-      activity(r.id,'downloaded-documents','Separate resume and cover letter PDFs downloaded','',{jobTitle:r.jobTitle||'',files:names.join(', ')});
+      activity(r.id,'document-download-requested','Requested separate resume and cover letter PDF downloads','',{jobTitle:r.jobTitle||'',files:names.join(', ')});
       await persist();
-      notify('Both PDFs downloaded. If only one appears, allow multiple downloads for JobOS and click again.');
+      notify('Requested both PDFs. Check your downloads; if one is missing, allow multiple downloads for JobOS or use the individual PDF buttons.');
     }catch(error){notify('PDF downloads failed: '+error.message);}
   }
   async function downloadJobPDF(id,kind){
@@ -666,8 +666,8 @@ async function saveStrategy(e){
     try{
       await window.JobOSDocuments.ensure();
       const name=window.JobOSDocuments.save(r,kind);
-      activity(r.id,'downloaded-document',kind+' PDF downloaded','',{jobTitle:r.jobTitle||'',file:name});
-      await persist();notify(kind.replace('_',' ')+' downloaded: '+name);
+      activity(r.id,'document-download-requested',kind+' PDF download requested','',{jobTitle:r.jobTitle||'',file:name});
+      await persist();notify(kind.replace('_',' ')+' download requested: '+name+'. Check your browser downloads.');
     }catch(error){notify('PDF download failed: '+error.message);}
   }
   async function copyRecruiterNote(id){
