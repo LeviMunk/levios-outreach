@@ -240,60 +240,46 @@
     }catch{return '';}
   };
   const munkosContactReady=r=>r.type!=='Business'||validMail(r.email)||!!verifiedSocialUrl(r.profile);
+  function isCleaningBusiness(rec){return /clean|maid|housekeep|janitor|carpet|upholstery|floor care/i.test([rec.name,rec.industry,rec.offerModule].join(' '));}
+  function cleaningFarEnough(rec){
+    if(!isCleaningBusiness(rec))return true;
+    if(rec.distanceMiles!==''&&rec.distanceMiles!=null&&Number.isFinite(Number(rec.distanceMiles)))return Number(rec.distanceMiles)>=50;
+    const loc=String(rec.location||'').toLowerCase();
+    if(/appleton|kaukauna|kimberly|little chute|neenah|menasha|oshkosh|green bay|de pere|fox cities|fox valley|fond du lac|hortonville/.test(loc))return false;
+    return /madison|milwaukee|waukesha|racine|kenosha|sheboygan|west bend|janesville|beloit|watertown|sun prairie|brookfield|wauwatosa/.test(loc);
+  }
   function businessPitch(rec){
-    const name=String(rec.name||'').toLowerCase(),industry=String(rec.industry||'').toLowerCase();
-    if(name.includes('bowtie carpet'))return {
-      hook:'I saw that BowTie focuses on carpet cleaning.',
-      idea:'A simple dashboard could show which estimates turn into booked jobs, when past customers might be ready for another cleaning, and which services bring people back.',
-      social:'I saw BowTie does carpet cleaning. I build simple dashboards to track quotes that turn into jobs and when past customers might be ready to book again.'
+    const name=String(rec.name||'your business'),industry=String(rec.industry||'').toLowerCase(),angle=String(rec.angle||'').toLowerCase();
+    if(/carpet|upholstery|floor care/.test(name.toLowerCase()+' '+industry))return {
+      hook:'I came across '+name+' and noticed you work with carpet and floor cleaning.',
+      idea:'I have been building a simple way to keep track of estimates, booked jobs, and customers who might be ready for another cleaning.',
+      social:'I noticed you offer carpet or floor cleaning. I am building a simple way to track quotes, booked jobs, and follow-ups.'
     };
-    if(name.includes('sparkling spaces'))return {
-      hook:'I noticed Sparkling Spaces works with rentals, realtors, and commercial properties.',
-      idea:'A dashboard could help track repeat property managers, which jobs bring in the most work, and which past clients may need another clean.',
-      social:'I noticed you work with rentals, realtors, and commercial spaces. I build dashboards to track repeat property clients and which jobs bring in work.'
+    if(/rental|property|commercial|office|realtor/.test(angle+' '+industry))return {
+      hook:'I came across '+name+' while looking into cleaning teams that handle properties or commercial spaces.',
+      idea:'I am working on a simple tool to see which property contacts book again, keep upcoming cleans organized, and follow up on quotes.',
+      social:'I am putting together a simple tool for cleaning teams working with properties, with repeat bookings and quote follow-ups in one place.'
     };
-    if(name.includes('queen of cleaning'))return {
-      hook:'I saw that Queen of Cleaning offers both regular home cleaning and specialty cleaning.',
-      idea:'A dashboard could show which one-time jobs turn into regular customers, which services get booked most, and who might be worth following up with.',
-      social:'I noticed you do regular and specialty cleaning. I build dashboards to see which one-time jobs turn into repeat customers and who to follow up with.'
-    };
-    if(name.includes('suntastic'))return {
-      hook:'I came across Suntastic Home Cleaning in Kaukauna.',
-      idea:'A dashboard could help track new cleaning requests, which customers book again, and when to send a friendly reminder to past clients.',
-      social:'I came across Suntastic in Kaukauna. I build dashboards for tracking new requests, repeat cleanings, and follow-ups with past customers.'
-    };
-    if(/carpet|upholstery|floor care/.test(name+' '+industry))return {
-      hook:'I noticed you offer carpet or floor-cleaning services.',
-      idea:'A dashboard could track estimates, bookings, and when past customers might be ready for another cleaning.',
-      social:'I build dashboards that track carpet-cleaning estimates, booked jobs, and when customers might need service again.'
-    };
-    if(/rental|property|commercial|real estate/.test(name+' '+industry+' '+String(rec.angle||'').toLowerCase()))return {
-      hook:'I noticed you work with properties and cleaning jobs.',
-      idea:'A dashboard could show which property contacts bring repeat work, which quotes turn into jobs, and which services get requested most.',
-      social:'I build dashboards for property-service businesses to track repeat clients, quotes, and booked jobs.'
-    };
-    if(/clean|maid|janitor|housekeep/.test(name+' '+industry))return {
-      hook:'I noticed you offer cleaning services in the Fox Valley.',
-      idea:'A dashboard could track quote requests, regular bookings, and past customers who might be ready to book another clean.',
-      social:'I build dashboards for cleaning businesses to track quotes, regular bookings, and past-customer follow-ups.'
+    if(isCleaningBusiness(rec))return {
+      hook:'I came across '+name+' while looking at cleaning businesses.',
+      idea:'I am building a simple tool that shows which requests turn into jobs, when regular customers are due again, and which past customers might be worth checking in with.',
+      social:'I am building a simple tool to help cleaning businesses track quote requests, repeat visits, and follow-ups.'
     };
     return {
-      hook:'I came across your business while looking at Fox Valley service companies.',
-      idea:'A simple dashboard could show which inquiries turn into customers, which customers return, and what brings in the most work.',
-      social:'I build dashboards for service businesses to track inquiries, repeat customers, and what actually brings in work.'
+      hook:'I came across '+name+' and had an idea that might fit the way your business works.',
+      idea:'I build straightforward tools for keeping track of inquiries, follow-ups, repeat customers, and what brings people back.',
+      social:'I build practical tools for seeing which inquiries become customers and keeping track of follow-ups.'
     };
   }
   function businessDraft(rec){
-    const name=String(rec.name||'your business').trim(),pitch=businessPitch(rec);
+    const name=String(rec.name||'your business').trim(),p=businessPitch(rec);
     const greeting=firstName(rec.person)?'Hi '+firstName(rec.person)+',':'Hi '+name+' team,';
-    return {
-      subject:'An idea for '+name,
-      draft:greeting+'\n\n'+pitch.hook+'\n\nI build simple, custom dashboards for business owners. '+pitch.idea+'\n\nIt\'s about getting more from work you already have instead of spending more on ads.\n\nWould you be open to seeing a quick example?\n\nLevi'
-    };
+    return {subject:isCleaningBusiness(rec)?'Quick idea for '+name:'An idea for '+name,
+      draft:greeting+'\n\n'+p.hook+'\n\n'+p.idea+'\n\nIt is not meant to replace your booking system or add another complicated app. The goal is to make it easier to spot work worth following up on without spending more on ads.\n\nIf you are interested in seeing a demo, I would be happy to send a link or walk you through it on a quick video call.\n\nLevi'};
   }
   function businessSocialDraft(rec){
-    const pitch=businessPitch(rec);
-    return (firstName(rec.person)?'Hey '+firstName(rec.person)+'! ':'Hey! ')+pitch.social+' The idea is to get more from existing customers before spending more on ads. Want me to send a quick example? - Levi';
+    const p=businessPitch(rec);
+    return (firstName(rec.person)?'Hey '+firstName(rec.person)+'! ':'Hey! ')+p.social+' If you want to see what I mean, I can send a demo link or show you on a quick video call. - Levi';
   }
   function generalEmploymentDraft(rec){
     const greet=firstName(rec.person)?'Hi '+firstName(rec.person)+',':'Hello '+rec.name+' team,';
@@ -361,15 +347,21 @@
   function workspace(view){
     const records=workspaceRecords(view).filter(r=>!isPassed(r)).sort(opportunitySort);
     const career=view==='career',business=view==='business',careerOutreach=view==='careeroutreach',type=workspaceType(view);
-    const qualified=records.filter(r=>(!career||jobMeetsThreshold(r)||!!r.appliedDate)&&(!business||munkosContactReady(r)));
+    const qualified=records.filter(r=>(!career||jobMeetsThreshold(r)||!!r.appliedDate)&&(!business||(munkosContactReady(r)&&cleaningFarEnough(r))));
     const visible=qualified.filter(r=>[r.name,r.jobTitle,r.location,r.industry,r.person].join(' ').toLowerCase().includes(filter.query.toLowerCase()));
+    const appliedJobs=career?visible.filter(r=>!!r.appliedDate||['Applied','Recruiter Screen','Interview','Offer'].includes(r.stage)):[];
+    const openOpportunities=career?visible.filter(r=>!appliedJobs.includes(r)):visible;
     const held=career?records.filter(r=>!jobMeetsThreshold(r)&&!r.appliedDate):[];
     const withoutContact=business?records.filter(r=>!munkosContactReady(r)):[];
+    const nearbyCleaning=business?records.filter(r=>isCleaningBusiness(r)&&!cleaningFarEnough(r)):[];
     const heading=career?'Jobs worth applying to':business?'Businesses to contact':careerOutreach?'Employers to approach':'People to connect with';
     const explanation=career?'Jobs meeting your 75-point cutoff appear here.':business?'Only businesses with a verified email or social profile appear here. Every email opens with the To field filled in.':'Each prospect has a suggested outreach message to review.';
     return '<div class="simple-workspace-heading"><div><h2>'+heading+'</h2><p>'+explanation+'</p></div><button class="button button-secondary button-small" data-action="new" data-type="'+escapeHtml(type)+'">+ Add</button></div>'+
       '<div class="simple-search"><input id="search-input" placeholder="Search..." aria-label="Search opportunities" value="'+escapeHtml(filter.query)+'"></div>'+
-      (visible.length?'<div class="simple-list">'+visible.slice(0,50).map(simplifiedCard).join('')+'</div>':'<div class="card simple-empty"><h3>Nothing ready here yet</h3><p>'+ (career?'No verified jobs above 75 have been imported into your vault yet. Check research updates below.':'Research is being collected. You can add a contact manually.')+'</p></div>')+
+      (openOpportunities.length?'<div class="simple-list">'+openOpportunities.slice(0,50).map(simplifiedCard).join('')+'</div>':'<div class="card simple-empty"><h3>Nothing waiting here</h3><p>'+ (career?'No unapplied jobs above 75 are currently waiting for action.':'Research is being collected. You can add a contact manually.')+'</p></div>')+
+      (career?'<details class="simple-secondary"><summary>Applied · '+appliedJobs.length+' job(s)</summary><p>Confirmed applications, with follow-up and interview details.</p>'+(appliedJobs.length?'<div class="simple-list">'+appliedJobs.map(simplifiedCard).join('')+'</div>':'<p>No applications confirmed yet.</p>')+'</details>':'')+
+      (career?careerInboxPanel():'')+
+      (nearbyCleaning.length?'<details class="simple-secondary"><summary>Held for later · local or distance-unverified cleaning prospects ('+nearbyCleaning.length+')</summary><p>These prospects stay in your vault but are not part of the practice outreach queue. Research must establish they are at least 50 miles from Appleton.</p></details>':'')+
       (withoutContact.length?'<details class="simple-secondary"><summary>Still researching contact details ('+withoutContact.length+')</summary><p>These businesses are hidden from outreach until a public email address or genuine social profile is found.</p></details>':'')+
       (held.length?'<details class="simple-secondary"><summary>Other job research ('+held.length+')</summary><p>These leads are below the 75-point cutoff or missing information.</p>'+held.slice(0,20).map(simplifiedCard).join('')+'</details>':'')+
       '<details class="simple-secondary"><summary>Research updates and import tools</summary>'+stagedResearchPanel(career?'career':business?'business':careerOutreach?'careeroutreach':'all')+'</details>';
@@ -418,12 +410,12 @@
       '<div class="simple-detail card"><div class="eyebrow">'+escapeHtml(r.type)+'</div><h2>'+escapeHtml(r.jobTitle||r.name)+'</h2><p class="simple-detail-meta">'+escapeHtml([r.name,r.location,career?r.salary:r.industry].filter(Boolean).join(' · '))+'</p>'+
       (career?'<div class="simple-detail-note"><strong>'+rankOpportunity(r).score+'/100 JobOS fit score</strong><p>'+escapeHtml(r.angle||'Review the role and prepare your application.')+'</p><p>Hiring contact: '+(verifiedContact?escapeHtml(r.person):'Not verified yet')+'</p></div>':
       '<div class="simple-email"><span>EMAIL DRAFT</span><h3>'+escapeHtml(subject||'Suggested introduction')+'</h3><p>'+escapeHtml(draft||'No message prepared yet.')+'</p>'+(r.channel==='Email'&&!validMail(r.email)?'<small>Recipient not found. Gmail will open with an empty To field.</small>':'')+'</div>')+
-      '<div class="simple-primary-actions">'+actions+'</div>'+contactPanel+recruiterPanel+'<div class="simple-detail-footer">'+link(source,'Research source')+'<button class="button button-secondary" data-action="edit" data-id="'+escapeHtml(r.id)+'">Edit details</button><button class="button button-secondary" data-action="passlead" data-id="'+escapeHtml(r.id)+'">Pass</button></div></div>';
+      '<div class="simple-primary-actions">'+actions+'</div>'+contactPanel+recruiterPanel+(career?'':'<div class="simple-detail-footer">'+link(source,'Research source')+'<button class="button button-secondary" data-action="edit" data-id="'+escapeHtml(r.id)+'">Edit details</button><button class="button button-secondary" data-action="passlead" data-id="'+escapeHtml(r.id)+'">Pass</button></div>')+'</div>';
   }
   function stagedResearchPanel(scope='all'){
     const data=window.JobOSResearchPreview||{records:[],state:'signed_out'};
     const all=Array.isArray(data.records)?data.records:[];
-    const filteredAll=all.filter(r=>(r.type!=='Career'||jobMeetsThreshold(r))&&munkosContactReady(r));
+    const filteredAll=all.filter(r=>(r.type!=='Career'||jobMeetsThreshold(r))&&munkosContactReady(r)&&cleaningFarEnough(r));
     const belowThreshold=all.filter(r=>r.type==='Career'&&!jobMeetsThreshold(r)).length;
     const stillResearching=all.filter(r=>r.type==='Business'&&!munkosContactReady(r)).length;
     const items=scope==='career'?filteredAll.filter(r=>r.type==='Career'):scope==='business'?filteredAll.filter(r=>r.type==='Business'):scope==='careeroutreach'?filteredAll.filter(r=>r.type==='Career Outreach'):filteredAll;
@@ -439,10 +431,10 @@
     const active=state.records.filter(r=>!isPassed(r)),career=active.filter(r=>r.type==='Career'&&(jobMeetsThreshold(r)||!!r.appliedDate)),due=active.filter(r=>isDue(r)&&munkosContactReady(r));
     const group=[['Employment','career'],['Career Outreach','careeroutreach'],['MunkOS','business'],['Networking','networking']];
     const pending=career.filter(r=>!r.appliedDate).sort((a,b)=>Number(window.JobOSDocuments?.has(b))-Number(window.JobOSDocuments?.has(a))||opportunitySort(a,b));
-    const drafts=active.filter(r=>r.type!=='Career'&&!isSent(r)&&munkosContactReady(r)).sort(opportunitySort);
+    const drafts=active.filter(r=>r.type!=='Career'&&!isSent(r)&&munkosContactReady(r)&&cleaningFarEnough(r)).sort(opportunitySort);
     const actions=[...pending.slice(0,4),...due.slice(0,3),...drafts.slice(0,5)].filter((r,i,a)=>a.findIndex(x=>x.id===r.id)===i).slice(0,8);
     const feed=window.JobOSResearchPreview;
-    const staged=Array.isArray(feed?.records)?feed.records.filter(r=>r.type!=='Career'||jobMeetsThreshold(r)):[];
+    const staged=Array.isArray(feed?.records)?feed.records.filter(r=>(r.type!=='Career'||jobMeetsThreshold(r))&&cleaningFarEnough(r)):[];
     const waiting=staged.length?'<section class="simple-new-inbox card"><div><div class="eyebrow">NEW RESEARCH</div><h2>'+staged.length+' opportunities found for you</h2><p>'+staged.filter(r=>r.type==='Career').length+' qualifying jobs · '+staged.filter(r=>r.type==='Business').length+' MunkOS prospects · Ready to bring into your workspace</p></div><button class="button button-primary" data-action="researchsync">Add to JobOS</button></section>':'';
     return waiting+'<div class="simple-metrics">'+metricCard('Jobs to review',pending.length,'Verified 75+ listings')+metricCard('Messages sent',active.filter(isSent).length,'Confirmed')+metricCard('Replies',active.filter(isReply).length,'Tracked responses')+metricCard('Follow-ups',due.length,'Due now')+'</div>'+
       '<div class="simple-section"><div class="simple-section-head"><h2>Your next actions</h2><span>'+actions.length+' opportunities</span></div>'+
@@ -762,7 +754,7 @@ async function saveStrategy(e){
     notify(proposed.length+' prospects and '+addedStrategies.length+' strategies imported. No email sent.');
     return report;
   }
-  function handleAction(el){const action=el.dataset.action,id=el.dataset.id;if(action==='opensocial')return openBusinessSocial(id);if(action==='downloadkit')return downloadApplicationKit(id);if(action==='pdfresume')return downloadJobPDF(id,'Resume');if(action==='pdfcover')return downloadJobPDF(id,'Cover_Letter');if(action==='copyrecruiter')return copyRecruiterNote(id);if(action==='emailrecruiter')return openRecruiterEmail(id);if(action==='opendetail'){detailReturnView=activeView;selectedRecordId=id;return navigate('detail');}if(action==='detailback')return navigate(detailReturnView);if(action==='savedraft')return saveSuggestedDraft(id);if(action==='copydraft')return copyDraft(id);if(action==='opencompose')return openGmailComposer(id);if(action==='emailoutreach')return openVerifiedOutreachEmail(id);if(action==='confirmsent')return confirmExternalSend(id);if(action==='approvequick')return approveMessage(id);if(action==='prepareats')return prepareATS(id);if(action==='recruiterdraft')return prepareRecruiterMessage(id);if(action==='researchsetup')return document.getElementById('cloud-open')?.click();if(action==='researchsync'){if(window.LeviCloud?.refreshResearch)return window.LeviCloud.refreshResearch().catch(e=>notify('Research inbox: '+e.message));return document.getElementById('cloud-open')?.click();}if(action==='passlead')return passLead(id,el.closest('.intake-item,.package-row')?.querySelector('[data-pass-reason]')?.value||'Not a fit');if(action==='approvelead')return approveLead(id);if(action==='rejectlead')return rejectLead(id);if(action==='approvemessage')return approveMessage(id);if(action==='applied')return markApplied(id);if(action==='scanreplies')return scanReplies();if(action==='classifyreply')return showReplyModal(id,el.dataset.message||'');if(action==='strategynew')return editStrategy();if(action==='strategyedit')return editStrategy(id);if(action==='new')return editRecord(null,el.dataset.type||null);if(action==='edit')return editRecord(id);if(action==='copyopen')return copyAndOpen(id);if(action==='gmaildraft'){const r=findRecord(id);if(r&&isPassed(r))return notify('Passed opportunities cannot be contacted.');if(!r||!isApproved(r)||!messageIsApproved(r))return notify('Approve the opportunity and current message in Intake first.');if(r?.optedOut)return notify('Do not contact: this prospect opted out.');if(!window.LeviCloud)return notify('Cloud integration unavailable.');window.LeviCloud.createDraft(r).then(()=>notify('Gmail draft created, not sent. Check Gmail Drafts.')).catch(e=>alert('Gmail draft was not created: '+e.message));return;}if(action==='reply')return markReply(id);if(action==='snooze')return snooze(id);if(action==='backup')return encryptedBackup();if(action==='csv')return exportCsv();if(action==='import')return $('import-file').click();}
+  function handleAction(el){const action=el.dataset.action,id=el.dataset.id;if(action==='opensocial')return openBusinessSocial(id);if(action==='downloadkit')return downloadApplicationKit(id);if(action==='pdfresume')return downloadJobPDF(id,'Resume');if(action==='pdfcover')return downloadJobPDF(id,'Cover_Letter');if(action==='copyrecruiter')return copyRecruiterNote(id);if(action==='emailrecruiter')return openRecruiterEmail(id);if(action==='opendetail'){detailReturnView=activeView;selectedRecordId=id;return navigate('detail');}if(action==='detailback')return navigate(detailReturnView);if(action==='savedraft')return saveSuggestedDraft(id);if(action==='copydraft')return copyDraft(id);if(action==='scancareerinbox')return scanCareerInbox();if(action==='opencompose')return openGmailComposer(id);if(action==='emailoutreach')return openVerifiedOutreachEmail(id);if(action==='confirmsent')return confirmExternalSend(id);if(action==='approvequick')return approveMessage(id);if(action==='prepareats')return prepareATS(id);if(action==='recruiterdraft')return prepareRecruiterMessage(id);if(action==='researchsetup')return document.getElementById('cloud-open')?.click();if(action==='researchsync'){if(window.LeviCloud?.refreshResearch)return window.LeviCloud.refreshResearch().catch(e=>notify('Research inbox: '+e.message));return document.getElementById('cloud-open')?.click();}if(action==='passlead')return passLead(id,el.closest('.intake-item,.package-row')?.querySelector('[data-pass-reason]')?.value||'Not a fit');if(action==='approvelead')return approveLead(id);if(action==='rejectlead')return rejectLead(id);if(action==='approvemessage')return approveMessage(id);if(action==='applied')return markApplied(id);if(action==='scanreplies')return scanReplies();if(action==='classifyreply')return showReplyModal(id,el.dataset.message||'');if(action==='strategynew')return editStrategy();if(action==='strategyedit')return editStrategy(id);if(action==='new')return editRecord(null,el.dataset.type||null);if(action==='edit')return editRecord(id);if(action==='copyopen')return copyAndOpen(id);if(action==='gmaildraft'){const r=findRecord(id);if(r&&isPassed(r))return notify('Passed opportunities cannot be contacted.');if(!r||!isApproved(r)||!messageIsApproved(r))return notify('Approve the opportunity and current message in Intake first.');if(r?.optedOut)return notify('Do not contact: this prospect opted out.');if(!window.LeviCloud)return notify('Cloud integration unavailable.');window.LeviCloud.createDraft(r).then(()=>notify('Gmail draft created, not sent. Check Gmail Drafts.')).catch(e=>alert('Gmail draft was not created: '+e.message));return;}if(action==='reply')return markReply(id);if(action==='snooze')return snooze(id);if(action==='backup')return encryptedBackup();if(action==='csv')return exportCsv();if(action==='import')return $('import-file').click();}
   document.addEventListener('pointerdown',()=>lastActivityAt=Date.now(),{passive:true});document.addEventListener('keydown',()=>lastActivityAt=Date.now());
   document.addEventListener('click',e=>{const nav=e.target.closest('[data-nav],[data-view]');if(nav&&!nav.disabled){navigate(nav.dataset.nav||nav.dataset.view);return;}const close=e.target.closest('[data-close]');if(close){$(close.dataset.close).close();return;}const action=e.target.closest('[data-action]');if(action&&!action.disabled)handleAction(action);});
   document.addEventListener('input',e=>{if(e.target.id==='search-input'){filter.query=e.target.value;const pos=e.target.selectionStart;render();const input=$('search-input');if(input){input.focus();input.setSelectionRange(pos,pos);}}});
