@@ -99,7 +99,7 @@
       if(!validMail(existing.email)&&validMail(source.email)){existing.email=source.email;existing.channel='Email';changed=true;}
       if(!verifiedSocialUrl(existing.profile)&&verifiedSocialUrl(source.profile)){existing.profile=source.profile;changed=true;}
       if(existing.offerModule?.includes('CleaningOS')){existing.offerModule='Custom Revenue Dashboard';changed=true;}
-      const legacy=!!existing.draft?.includes('I build practical tools for smaller companies through')||!!existing.draft?.includes('I build simple, custom dashboards that help business owners spot missed sales');
+      const legacy=!!existing.draft?.includes('I build practical tools for smaller companies through')||!!existing.draft?.includes('I build simple, custom dashboards that help business owners spot missed sales')||!!existing.draft?.includes('I am building a simple tool that shows which requests turn into jobs')||!!existing.draft?.includes('It is not meant to replace your booking system or add another complicated app.');
       if((!existing.draft||legacy)&&!existing.messageApprovedAt){
         const draft=businessDraft(existing);
         if(existing.draft!==draft.draft||existing.subject!==draft.subject){existing.draft=draft.draft;existing.subject=draft.subject;changed=true;}
@@ -136,7 +136,7 @@
       if(rec.type!=='Business'||!isCleaningBusiness(rec)||isSent(rec)||rec.messageApprovedAt||rec.optedOut)continue;
       if(state.activities.some(a=>a.recordId===rec.id&&a.kind==='draft-revision'))continue;
       const oldTemplate=String(rec.draft||'');
-      if(oldTemplate&&!oldTemplate.includes('I build simple, custom dashboards for business owners.')&&!oldTemplate.includes('I build practical tools for smaller companies through')&&!oldTemplate.includes('I build simple, custom dashboards that help business owners spot missed sales'))continue;
+      if(oldTemplate&&!oldTemplate.includes('I build simple, custom dashboards for business owners.')&&!oldTemplate.includes('I build practical tools for smaller companies through')&&!oldTemplate.includes('I build simple, custom dashboards that help business owners spot missed sales')&&!oldTemplate.includes('I am building a simple tool that shows which requests turn into jobs')&&!oldTemplate.includes('It is not meant to replace your booking system or add another complicated app.'))continue;
       const revised=businessDraft(rec);
       if(rec.draft===revised.draft&&rec.subject===revised.subject)continue;
       rec.draft=revised.draft;rec.subject=revised.subject;rec.updatedAt=new Date().toISOString();updatedCleaningDrafts++;
@@ -399,7 +399,7 @@
     const r=findRecord(selectedRecordId);
     if(!r)return '<div class="card"><p>That record is not available.</p><button class="button button-secondary" data-action="detailback">Back</button></div>';
     const career=r.type==='Career',suggested=career?null:r.type==='Business'?businessDraft(r):r.type==='Career Outreach'?generalEmploymentDraft(r):null;
-    const legacyBusiness=r.type==='Business'&&!r.messageApprovedAt&&(!!r.draft?.includes('I build practical tools for smaller companies through')||!!r.draft?.includes('I build simple, custom dashboards that help business owners spot missed sales'));
+    const legacyBusiness=r.type==='Business'&&!r.messageApprovedAt&&!isSent(r)&&(!!r.draft?.includes('I am building a simple tool that shows which requests turn into jobs')||!!r.draft?.includes('It is not meant to replace your booking system or add another complicated app.'));
     const draft=legacyBusiness?businessDraft(r).draft:r.draft||suggested?.draft||'',subject=r.subject||suggested?.subject||'';
     const verifiedContact=!!r.person&&((r.contactVerified==='official'&&validMail(r.email))||(r.contactVerified==='public-profile'&&!!safeUrl(r.profile)));
     const source=safeUrl(career?r.jobUrl:r.sourceUrl||r.website);
@@ -445,7 +445,7 @@
     const cards=items.slice(0,15).map(r=>{
       const target=safeUrl(r.type==='Career'?r.jobUrl||r.sourceUrl:r.sourceUrl||r.website);
       const details=[r.name,r.location,r.type==='Career'?(r.salary||'Pay not listed'):(r.industry||'MunkOS prospect')].filter(Boolean);
-      return '<div class="research-preview-item"><div class="lead-info"><strong>'+escapeHtml(r.type==='Career'?r.jobTitle||r.name:r.name)+'</strong><div class="lead-meta">'+escapeHtml(details.join(' · '))+'</div><div class="lead-meta">Queued in Research Inbox · Not yet imported</div>'+(r.type==='Business'?'<div class="research-preview-draft"><b>Prepared draft preview:</b> '+escapeHtml(businessDraft(r).subject)+'<p>'+escapeHtml(businessDraft(r).draft.slice(0,280))+'</p><small>Sync to edit, approve, and create a Gmail draft once a real email is verified.</small></div>':'')+'</div>'+(target?'<a class="button button-secondary button-small" target="_blank" rel="noopener noreferrer" href="'+escapeHtml(target)+'">Source ↗</a>':'')+'</div>';
+      return '<div class="research-preview-item"><div class="lead-info"><strong>'+escapeHtml(r.type==='Career'?r.jobTitle||r.name:r.name)+'</strong><div class="lead-meta">'+escapeHtml(details.join(' · '))+'</div><div class="lead-meta">Queued in Research Inbox · Not yet imported</div>'+(r.type==='Business'?'<div class="research-preview-draft"><b>Prepared draft preview:</b> '+escapeHtml(businessDraft(r).subject)+'<p>'+escapeHtml(businessDraft(r).draft.slice(0,280))+'</p><small>Open Draft pre-fills Gmail, then moves the contact to Sent on your instruction. A real email is required.</small></div>':'')+'</div>'+(target?'<a class="button button-secondary button-small" target="_blank" rel="noopener noreferrer" href="'+escapeHtml(target)+'">Source ↗</a>':'')+'</div>';
     }).join('');
     return '<section class="card research-preview-panel"><div class="card-head"><h2>Research Inbox · '+filteredAll.length+' qualified waiting</h2><button class="button button-primary button-small" data-action="researchsync">Sync opportunities</button></div><p class="small subtle">'+escapeHtml(notice)+(belowThreshold?' · '+belowThreshold+' job(s) held below 75.':'')+(stillResearching?' · '+stillResearching+' business contacts need email/social research.':'')+'</p>'+(items.length?'<div class="research-preview-list">'+cards+'</div>':all.length&&scope!=='all'?'<p class="small subtle">No queued items in this workspace. '+all.length+' waiting overall.</p>':'')+'<button class="button button-secondary button-small" data-action="researchsetup">Cloud & Gmail settings</button></section>';
   }
