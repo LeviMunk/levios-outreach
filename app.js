@@ -125,6 +125,18 @@
       state={version:1,createdAt:new Date().toISOString(),records:[],activities:[],strategies:STRATEGY_STARTERS.map(x=>({...x}))};
       await writeVault();
     }
+    // Refresh only untouched, unsent legacy auto-drafts. Preserve all edited/approved/sent copy.
+    let updatedCleaningDrafts=0;
+    for(const rec of state.records){
+      if(rec.type!=='Business'||!isCleaningBusiness(rec)||isSent(rec)||rec.messageApprovedAt||rec.optedOut)continue;
+      if(state.activities.some(a=>a.recordId===rec.id&&a.kind==='draft-revision'))continue;
+      const oldTemplate=String(rec.draft||'');
+      if(oldTemplate&&!oldTemplate.includes('I build simple, custom dashboards for business owners.')&&!oldTemplate.includes('I build practical tools for smaller companies through')&&!oldTemplate.includes('I build simple, custom dashboards that help business owners spot missed sales'))continue;
+      const revised=businessDraft(rec);
+      if(rec.draft===revised.draft&&rec.subject===revised.subject)continue;
+      rec.draft=revised.draft;rec.subject=revised.subject;rec.updatedAt=new Date().toISOString();updatedCleaningDrafts++;
+    }
+    if(updatedCleaningDrafts){await writeVault();activity('','cleaning-draft-update',updatedCleaningDrafts+' untouched cleaning outreach drafts refreshed');await writeVault();}
     $('vault-pass').value='';$('vault-confirm').value='';
     $('unlock-screen').hidden=true;$('app-shell').hidden=false;
     lastActivityAt=Date.now();navigate('overview');try{await importStarterResearch();}catch(e){console.warn('Starter research not loaded:',e.message);}window.LeviCloud?.onVaultOpen?.();
@@ -574,7 +586,7 @@ async function saveStrategy(e){
   if(idx>=0)state.strategies[idx]=strategy;else state.strategies.push(strategy);
   await persist();$('strategy-modal').close();notify('Strategy saved in your encrypted vault.');
 }
-  function navigate(view){selectedRecordId=view==='detail'?selectedRecordId:null;activeView=VIEWS[view]?view:'overview';filter={query:'',type:'All',stage:'All'};render();$('main-content').focus({preventScroll:true});window.scrollTo({top:0,behavior:'instant'});}
+  function navigate(view){selectedRecordId=view==='detail'?selectedRecordId:null;activeView=VIEWS[view]?view:'overview';filter={query:'',type:'All',stage:'All'};render();$('main-content').focus({preventScroll:true});window.scrollTo({top:0,behavior:'instant'});if(activeView==='career'&&window.LeviCloud?.isGmailConnected?.()&&!careerInboxCheckedAt&&!careerInboxWorking)scanCareerInbox();}
   function render(){if(!state)return;ensureStrategies();const [title,subtitle]=VIEWS[activeView];$('top-view').textContent=activeView.toUpperCase();$('page-title').innerHTML=escapeHtml(title.replace(/\.$/,''))+'<span class="lime-dot">.</span>';$('page-subtitle').textContent=subtitle;$('eyebrow').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'}).toUpperCase();const s=stat();$('nav-ready').textContent=state.records.filter(r=>!isPassed(r)&&(r.draft?.trim()||['Business','Career Outreach'].includes(r.type))).length;$('nav-due').textContent=s.due;document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===activeView));$('view-root').innerHTML=({overview,detail,intake,career:()=>workspace('career'),careeroutreach:()=>workspace('careeroutreach'),business:()=>workspace('business'),networking:()=>workspace('networking'),queue,contacts,pipeline,followups,insights,strategies:strategiesView}[activeView])();}
   function editRecord(id=null,type=null){ensureStrategies();editingId=id;const r=id?findRecord(id):null;$('record-title').textContent=r?'Edit opportunity':'New opportunity';$('delete-record').hidden=!r;const form=$('record-form');form.reset();if(!r && type)form.elements.type.value=type;else if(!r && workspaceType(activeView))form.elements.type.value=workspaceType(activeView);form.elements.strategyId.innerHTML='<option value="">Not in an experiment</option>'+state.strategies.filter(x=>x.status!=='archived'||x.id===r?.strategyId).map(x=>'<option value="'+escapeHtml(x.id)+'">'+escapeHtml(x.name)+'</option>').join('');for(const el of form.elements){if(el.name&&r&&Object.hasOwn(r,el.name))el.value=r[el.name]??'';}$('record-error').textContent='';$('record-modal').showModal();syncRecordFormType();form.elements.name.focus();}
   function canonical(value){return String(value||'').toLowerCase().trim().replace(/^https?:\/\//,'').replace(/^www\./,'').replace(/\/$/,'');}
