@@ -558,6 +558,7 @@ async function saveStrategy(e){
     const r=findRecord(id);if(!r||r.type!=='Career')return;
     if(!window.JobOSDocuments?.has(r))return notify('No reviewed PDF package is ready for this job.');
     try{
+      await window.JobOSDocuments.ensure();
       const name=window.JobOSDocuments.save(r,kind);
       activity(r.id,'downloaded-document',kind+' PDF downloaded','',{jobTitle:r.jobTitle||'',file:name});
       await persist();notify(kind.replace('_',' ')+' downloaded: '+name);
