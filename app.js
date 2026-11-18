@@ -409,12 +409,10 @@
     const draft=legacyBusiness?businessDraft(r).draft:r.draft||suggested?.draft||'',subject=r.subject||suggested?.subject||'';
     const verifiedContact=!!r.person&&((r.contactVerified==='official'&&validMail(r.email))||(r.contactVerified==='public-profile'&&!!safeUrl(r.profile)));
     const source=safeUrl(career?r.jobUrl:r.sourceUrl||r.website);
-    const contactPanel=r.type==='Business'?'<section class="munkos-contact"><div class="eyebrow">HOW TO REACH THEM</div>'+
-      (validMail(r.email)?'<div class="munkos-contact-line"><strong>To:</strong> <span>'+escapeHtml(r.email)+'</span></div>':'')+
-      (verifiedSocialUrl(r.profile)?'<div class="munkos-contact-line"><strong>Social:</strong> <a href="'+escapeHtml(safeUrl(r.profile))+'" target="_blank" rel="noopener noreferrer">Verified social profile ↗</a></div><div class="munkos-social-copy"><strong>Short DM draft</strong><p>'+escapeHtml(businessSocialDraft(r))+'</p></div>':'')+
-      '<div class="simple-primary-actions">'+(validMail(r.email)?'<button class="button button-primary" data-action="opencompose" data-id="'+escapeHtml(r.id)+'">Open Gmail with To filled in</button>':'')+
-      (verifiedSocialUrl(r.profile)?'<button class="button button-secondary" data-action="opensocial" data-id="'+escapeHtml(r.id)+'">Copy DM & open social</button>':'')+'</div></section>':'';
-
+    const contactPanel=r.type==='Business'?'<section class="munkos-contact"><div class="eyebrow">CONTACT</div>'+
+      (validMail(r.email)?'<div class="munkos-contact-line"><strong>To:</strong> <span>'+escapeHtml(r.email)+'</span></div>':'<p class="small subtle">A verified email is needed before Open Draft is available.</p>')+
+      (verifiedSocialUrl(r.profile)?'<div class="munkos-contact-line"><strong>Social:</strong> <a href="'+escapeHtml(safeUrl(r.profile))+'" target="_blank" rel="noopener noreferrer">Verified social profile ↗</a></div>':'')+
+      '</section>':'';
     const link=(url,label)=>safeUrl(url)?'<a class="button button-secondary" href="'+escapeHtml(safeUrl(url))+'" target="_blank" rel="noopener noreferrer">'+label+' ↗</a>':'';
     let actions='';
     if(career){
@@ -423,14 +421,9 @@
         (!r.appliedDate?'<button class="button button-secondary" data-action="applied" data-id="'+escapeHtml(r.id)+'">I applied</button>':'')+
         (r.appliedDate&&verifiedContact?'<button class="button button-secondary" data-action="recruiterdraft" data-id="'+escapeHtml(r.id)+'">Message recruiter</button>':'');
     }else{
-      actions=(!r.draft?.trim()?'<button class="button button-primary" data-action="savedraft" data-id="'+escapeHtml(r.id)+'">Use this draft</button>':!messageIsApproved(r)?'<button class="button button-primary" data-action="approvequick" data-id="'+escapeHtml(r.id)+'">Approve message</button>':
-        r.channel==='Email'?'<button class="button button-primary" data-action="opencompose" data-id="'+escapeHtml(r.id)+'">Open email in Gmail</button>':
-        '<button class="button button-primary" data-action="copyopen" data-id="'+escapeHtml(r.id)+'">Copy & open social</button>')+
-        (draft?'<button class="button button-secondary" data-action="copydraft" data-id="'+escapeHtml(r.id)+'">Copy</button>':'')+
-        (r.draft?.trim()&&!isSent(r)?'<button class="button button-secondary" data-action="confirmsent" data-id="'+escapeHtml(r.id)+'">I sent it</button>':'')+
-        (r.draft?.trim()&&messageIsApproved(r)&&r.channel==='Email'&&validMail(r.email)?'<button class="button button-secondary" data-action="gmaildraft" data-id="'+escapeHtml(r.id)+'">Save Gmail draft</button>':'')+
-        ((r.type==='Career Outreach'&&r.contactVerified==='official'&&validMail(r.email))||(r.type==='Business'&&validMail(r.email))?'<button class="button button-secondary" data-action="emailoutreach" data-id="'+escapeHtml(r.id)+'">Email outreach · Gmail</button>':'')+
-        (r.type==='Career Outreach'&&!validMail(r.email)?'<span class="small subtle">Email outreach unavailable until a real contact address is verified.</span>':'');
+      actions=isSent(r)?'<span class="small subtle">Already moved to Sent Outreach.</span>':
+        validMail(r.email)?'<button class="button button-primary" data-action="opencompose" data-id="'+escapeHtml(r.id)+'">Open Draft</button>':
+        '<span class="small subtle">Verified email needed before Open Draft.</span>';
     }
     const recruiter=career?window.JobOSDocuments?.recruiter(r):null;
     const recruiterPanel=career&&recruiter?'<section class="job-recruiter"><div class="eyebrow">RECRUITER OUTREACH</div><h3>'+escapeHtml(recruiter.name||'Hiring team contact')+'</h3><p class="small subtle">'+escapeHtml(recruiter.note||'A role-specific recruiter is not confirmed.')+'</p>'+
