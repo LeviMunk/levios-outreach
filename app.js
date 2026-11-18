@@ -799,6 +799,7 @@ async function saveStrategy(e){
   }
   async function copyRecruiterNote(id){
     const r=findRecord(id);if(!r||!window.JobOSDocuments?.has(r))return;
+    if(!r.appliedDate)return notify('Confirm your job application before preparing a recruiter message.');
     try{await navigator.clipboard.writeText(window.JobOSDocuments.message(r,'LinkedIn'));notify('LinkedIn message copied, not sent.');}
     catch{notify('Clipboard unavailable. You can select and copy the visible draft.');}
   }
@@ -823,7 +824,7 @@ async function saveStrategy(e){
     if(r.draft&&r.draft!==suggested.draft)activity(r.id,'draft-revision','Recruiter follow-up draft replaced','',{previous:r.draft.slice(0,9000),revised:suggested.draft.slice(0,9000)});
     r.subject=suggested.subject;r.draft=suggested.draft;r.channel=suggested.channel;
     r.messageApprovedAt='';r.updatedAt=new Date().toISOString();
-    activity(r.id,'recruiter-draft','Post-application recruiter message prepared for approval');
+    activity(r.id,'recruiter-draft','Post-application recruiter message prepared');
     await persist();editRecord(id);
   }
   async function markApplied(id){const rec=findRecord(id);if(!rec||rec.type!=='Career')return;if(isPassed(rec))return notify('This opportunity was passed.');if(!isApproved(rec)||!jobMeetsThreshold(rec))return notify('Only verified jobs scoring at least 75 may enter the application queue.');if(['Applied','Recruiter Screen','Interview','Offer'].includes(rec.stage))return notify('Application already recorded.');if(!confirm('Confirm you submitted an application for '+(rec.jobTitle||'this job')+' at '+rec.name+'?'))return;rec.stage='Applied';rec.appliedDate=today();rec.updatedAt=new Date().toISOString();if(!rec.followup)rec.followup=workdaysFrom(today(),6);activity(rec.id,'application','Job application confirmed submitted','',{jobTitle:rec.jobTitle||'',jobUrl:rec.jobUrl||'',appliedDate:rec.appliedDate});const followUp=recruiterDraft(rec);if(followUp&&!rec.draft){rec.subject=followUp.subject;rec.draft=followUp.draft;rec.channel=followUp.channel;rec.messageApprovedAt='';activity(rec.id,'recruiter-draft','Verified-contact follow-up note prepared for approval');}await persist();notify('Application recorded and follow-up suggested.');}
