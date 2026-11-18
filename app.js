@@ -674,18 +674,28 @@ async function saveStrategy(e){
     try{await navigator.clipboard.writeText(text);notify('Draft copied. This did not record a send.');}
     catch{notify('Clipboard permission denied. Select and copy the text shown in the card.');}
   }
-  function openGmailComposer(id){
-    const r=findRecord(id);if(!r||r.optedOut||isPassed(r))return;
-    if(r.channel!=='Email')return notify('Choose Email as the contact channel first.');
-    if(r.type==='Business'&&!validMail(r.email))return notify('No verified To address found. This prospect is held for contact research.');
-    const proposed=r.type==='Business'?businessDraft(r):r.type==='Career Outreach'?generalEmploymentDraft(r):{subject:r.subject||'',draft:r.draft||''};
-    const subject=r.subject||proposed.subject,body=r.draft||proposed.draft;
-    if(!body.trim())return notify('No email draft is available yet.');
-    let url='https://mail.google.com/mail/?view=cm&fs=1';
-    if(validMail(r.email))url+='&to='+encodeURIComponent(r.email);
-    url+='&su='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
-    window.open(url,'_blank','noopener,noreferrer');
-    notify(validMail(r.email)?'Gmail compose opened. This has not been sent.':'Gmail compose opened with an empty recipient. Add a real verified address before sending.');
+  async function openGmailComposer(id){
+    const r=findRecord(id);if(!r||r.optedOut||isPassed(r)||isSent(r))return;
+    if(!validMail(r.email))return notify('A real recipient email is required before opening a draft.');
+    if(r.type==='Career Outreach'&&r.contactVerified!=='official')return notify('A verified email is required for career outreach.');
+    const suggested=r.type==='Business'?businessDraft(r):r.type==='Career Outreach'?generalEmploymentDraft(r):{subject:'',draft:''};
+    const subject=(r.subject||suggested.subject||'').trim(),body=(r.draft||suggested.draft||'').trim();
+    if(!subject||!body)return notify('Recipient, subject, and message are required.');
+    const url='https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(r.email)+'&su='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+    const win=window.open(url,'_blank');
+    if(!win)return notify('Gmail popup blocked. Allow popups and try again; outreach has not been recorded.');
+    try{win.opener=null;}catch{}
+    // The user has explicitly directed that clicking Open Draft counts as their confirmation of sending.
+    // Gmail delivery cannot be verified by this local browser application.
+    const now=new Date().toISOString();
+    if(!r.draft){r.draft=body;r.subject=subject;}
+    activity(r.id,'sent','User confirmed send intent by opening prefilled Gmail draft',body,{channel:'Email',subject,recipient:r.email,assumedFromOpenDraft:true,verifiedDelivery:false,strategyId:r.strategyId||'',variant:r.variant||'',industry:r.industry||'',wordCount:body.split(/\s+/).length});
+    if(['Discovered','Researched','Draft Ready'].includes(r.stage))r.stage='Contacted';
+    if(!r.followup)r.followup=workdaysFrom(today(),5);
+    r.updatedAt=now;
+    if(activeView==='detail')navigate(detailReturnView||'business');
+    await persist();
+    notify('Draft opened. Outreach moved to Sent and follow-up tracking started.');
   }
   function openVerifiedOutreachEmail(id){
     const r=findRecord(id);
