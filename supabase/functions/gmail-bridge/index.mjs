@@ -203,6 +203,26 @@ async function reviewReplies(user,body){
   }
   return {reviewed,autoUpdated:false,matchedThreadOnly:true,readOnly:true};
 }
+async function reviewCareerInbox(user,body){
+  const jobs=Array.isArray(body.jobs)?body.jobs:[];
+  if(jobs.length>100||jobs.some(j=>typeof j.id!=='string'||j.id.length>120||typeof j.name!=='string'||j.name.length>150))throw Error('Invalid career lookup');
+  const token=await accessToken(user.id);
+  const query='in:inbox newer_than:30d -in:spam -in:trash {interview recruiter hiring scheduling calendly screening assessment availability next steps}';
+  const list=await gmailGet(token,'messages?q='+encodeURIComponent(query)+'&maxResults=50');
+  const candidates=[];
+  for(const m of (list.messages||[]).slice(0,30)){
+    const meta=await gmailGet(token,'messages/'+encodeURIComponent(m.id)+'?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Auto-Submitted&metadataHeaders=Precedence');
+    const h=Object.fromEntries((meta.payload?.headers||[]).map(x=>[x.name.toLowerCase(),x.value]));
+    const subject=String(h.subject||'').slice(0,200),from=String(h.from||'').slice(0,200);
+    if(!/interview|recruit|hiring|schedul|screening|assessment|availability|next steps|calendly/i.test(subject))continue;
+    if((meta.labelIds||[]).some(x=>['SPAM','TRASH','SENT','DRAFT'].includes(x)))continue;
+    if(h['auto-submitted']&&h['auto-submitted'].toLowerCase()!=='no')continue;
+    if(['bulk','list','junk'].includes(String(h.precedence||'').toLowerCase()))continue;
+    const job=jobs.find(j=>j.name.length>=4&&(from+' '+subject).toLowerCase().includes(j.name.toLowerCase()));
+    candidates.push({messageId:meta.id,threadId:meta.threadId,from,subject,receivedAt:new Date(Number(meta.internalDate)).toISOString(),companyMatch:job?.name||null,recordId:job?.id||null});
+  }
+  return {candidates,readOnly:true,autoUpdated:false,truncated:!!list.nextPageToken};
+}
 async function activity(user,body){
   const emails=Array.isArray(body.emails)?body.emails:[];
   if(emails.length>10||emails.some(e=>!validEmail(e)))throw Error("Supply up to 10 verified email addresses");
@@ -269,6 +289,7 @@ Deno.serve(async req=>{
     if(body.action==="draft")return json(await createDraft(user,body));
     if(body.action==="activity")return json(await activity(user,body));
     if(body.action==="reviewReplies")return json(await reviewReplies(user,body));
+    if(body.action==="reviewCareerInbox")return json(await reviewCareerInbox(user,body));
     if(body.action==="disconnect"){
       const {error}=await admin().from("outreach_gmail_connections").delete().eq("user_id",user.id);
       if(error)throw Error(error.message);
