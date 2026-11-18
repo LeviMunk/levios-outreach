@@ -36,7 +36,10 @@ function host(v){try{return new URL(v).hostname.toLowerCase().replace(/^www\./,"
 function validBusiness(r){
  if(!r||typeof r!=="object"||Array.isArray(r))return false;
  if(typeof r.name!=="string"||!r.name.trim()||r.name.length>150||
- r.type!=="Business"||r.stage!=="Researched"||r.email!==""||
+ r.type!=="Business"||r.stage!=="Researched"||
+ ((r.email&& !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email))||
+ (r.profile&&(!isUrl(r.profile)||!["instagram.com","facebook.com","linkedin.com"].includes(host(r.profile))))||
+ (!r.email&&!r.profile))||
  r.verification!=="directory"||!isUrl(r.website)||!isUrl(r.sourceUrl)||
  !/^https:\/\/www\.openstreetmap\.org\/(node|way|relation)\/\d+$/.test(r.sourceUrl)||
  typeof r.location!=="string"||!["Fox Cities, WI","Madison, WI","Milwaukee, WI"].includes(r.location)||
