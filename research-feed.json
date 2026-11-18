@@ -75,7 +75,8 @@
       "profile": "",
       "angle": "The company publishes recurring home-cleaning services for Appleton and the Fox Valley. A rebooking reminder campaign could be tested, but no problem is established.",
       "painHypothesis": "The company publishes recurring home-cleaning services for Appleton and the Fox Valley. A rebooking reminder campaign could be tested, but no problem is established.",
-      "notes": "Public business source verified November 17, 2026. Email address and decision-maker not verified; drafted outreach is a suggestion only. No outreach has been sent."
+      "notes": "Public business source verified November 17, 2026. Email address and decision-maker not verified; drafted outreach is a suggestion only. No outreach has been sent.",
+      "offerModule": "Custom Revenue Dashboard"
     },
     {
       "name": "True Joy Cleaning",
@@ -93,7 +94,8 @@
       "profile": "",
       "angle": "Publishes weekly and biweekly house-cleaning offerings. Consider optional repeat-booking follow-up and track which reminders lead to a response.",
       "painHypothesis": "Publishes weekly and biweekly house-cleaning offerings. Consider optional repeat-booking follow-up and track which reminders lead to a response.",
-      "notes": "Public business source verified November 17, 2026. Email address and decision-maker not verified; drafted outreach is a suggestion only. No outreach has been sent."
+      "notes": "Public business source verified November 17, 2026. Email address and decision-maker not verified; drafted outreach is a suggestion only. No outreach has been sent.",
+      "offerModule": "Custom Revenue Dashboard"
     },
     {
       "name": "Queen of Cleaning",
@@ -113,7 +115,8 @@
       "painHypothesis": "Offers recurring residential and specialty cleaning. Hypothesis: measurement of requests and routine-service retention may be useful; existing systems are unknown.",
       "notes": "Public business source verified November 17, 2026. Email address and decision-maker not verified; drafted outreach is a suggestion only. No outreach has been sent.",
       "contactSource": "https://queenofcleaningwi.com/privacy-policy/",
-      "socialSource": "https://linktr.ee/queenofcleaning"
+      "socialSource": "https://linktr.ee/queenofcleaning",
+      "offerModule": "Custom Revenue Dashboard"
     },
     {
       "name": "Partners in Grime Fox Cities LLC",
@@ -131,7 +134,8 @@
       "profile": "",
       "angle": "Public site highlights cleaning services in Fox Cities. Hypothesis: prospective customer follow-up and reactivation reporting could add insight.",
       "painHypothesis": "Public site highlights cleaning services in Fox Cities. Hypothesis: prospective customer follow-up and reactivation reporting could add insight.",
-      "notes": "Public business source verified November 17, 2026. Email address and decision-maker not verified; drafted outreach is a suggestion only. No outreach has been sent."
+      "notes": "Public business source verified November 17, 2026. Email address and decision-maker not verified; drafted outreach is a suggestion only. No outreach has been sent.",
+      "offerModule": "Custom Revenue Dashboard"
     },
     {
       "name": "Suntastic Home Cleaning",
@@ -150,7 +154,8 @@
       "angle": "Public site describes local house-cleaning services. Hypothesis: optional booking reminders and referral tracking could be useful; no unmet need is verified.",
       "painHypothesis": "Public site describes local house-cleaning services. Hypothesis: optional booking reminders and referral tracking could be useful; no unmet need is verified.",
       "notes": "Public business source verified November 17, 2026. Email address and decision-maker not verified; drafted outreach is a suggestion only. No outreach has been sent.",
-      "contactSource": "https://www.suntastichomecleaning.com/contact-2"
+      "contactSource": "https://www.suntastichomecleaning.com/contact-2",
+      "offerModule": "Custom Revenue Dashboard"
     },
     {
       "name": "BowTie Carpet Cleaning",
@@ -169,7 +174,8 @@
       "profile": "",
       "subject": "",
       "draft": "",
-      "notes": "Company contact email published on business website. Outreach idea is hypothetical; no revenue problem established."
+      "notes": "Company contact email published on business website. Outreach idea is hypothetical; no revenue problem established.",
+      "offerModule": "Custom Revenue Dashboard"
     },
     {
       "name": "Sparkling Spaces WI",
@@ -188,7 +194,8 @@
       "profile": "",
       "subject": "",
       "draft": "",
-      "notes": "Company contact email published on business website. Outreach idea is hypothetical; no revenue problem established."
+      "notes": "Company contact email published on business website. Outreach idea is hypothetical; no revenue problem established.",
+      "offerModule": "Custom Revenue Dashboard"
     }
   ]
 }
