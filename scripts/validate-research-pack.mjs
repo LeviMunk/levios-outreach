@@ -45,8 +45,15 @@ export function validateResearchPack(pack, { today = new Date().toISOString().sl
     if (!date(r.researchDate) || r.researchDate > today) errors.push(`${p}: valid, nonfuture researchDate required.`);
     if (!['official-site','directory','unverified'].includes(r.verification)) errors.push(`${p}: verification label required.`);
     if (typeof r.angle !== 'string' || r.angle.trim().length < 15) errors.push(`${p}: concrete nonempty opportunity hypothesis required.`);
-    if (r.email && (!emailPattern.test(r.email) || r.verification !== 'official-site'))
-      errors.push(`${p}: populated email needs valid format and official-site verification.`);
+    if (r.email && !emailPattern.test(r.email))
+      errors.push(`${p}: contact email format invalid.`);
+    const social = url(r.profile);
+    if (r.profile && (!social || !/^(instagram\.com|facebook\.com|linkedin\.com)$/.test(domain(r.profile))))
+      errors.push(`${p}: invalid verified social profile URL.`);
+    if (!r.email && !social)
+      errors.push(`${p}: at least one public email or business social profile required.`);
+    if(r.email && r.verification==='directory')
+      warnings.push(`${p}: email is directory-listed, not confirmed by the official website.`);
     if (r.email && domain(r.website) !== domain(r.sourceUrl))
       warnings.push(`${p}: contact email must be manually verified on the cited official site.`);
     if (r.draft || r.subject || r.cc || r.followup) errors.push(`${p}: research batches cannot pre-fill outreach or follow-ups.`);
