@@ -344,6 +344,7 @@
       (draft?'<button class="button button-secondary button-small" data-action="copydraft" data-id="'+escapeHtml(rec.id)+'">Copy</button>':'')+
       (draft&&rec.channel==='Email'?'<button class="button button-secondary button-small" data-action="opencompose" data-id="'+escapeHtml(rec.id)+'">Open Gmail compose</button>':'')+
       (rec.draft&&messageIsApproved(rec)&&validMail(rec.email)&&rec.channel==='Email'?'<button class="button button-secondary button-small" data-action="gmaildraft" data-id="'+escapeHtml(rec.id)+'">Create Gmail draft</button>':'')+
+      (((rec.type==='Career Outreach'&&rec.contactVerified==='official')||rec.type==='Business')&&validMail(rec.email)?'<button class="button button-secondary button-small" data-action="emailoutreach" data-id="'+escapeHtml(rec.id)+'">Email outreach</button>':'')+
       (rec.draft&&!isSent(rec)?'<button class="button button-secondary button-small" data-action="confirmsent" data-id="'+escapeHtml(rec.id)+'">I sent it</button>':'');
     return '<article class="job-row package-row"><div class="lead-info"><strong>'+escapeHtml(rec.jobTitle||rec.name)+'</strong><div class="lead-meta">'+escapeHtml(rec.name)+' · '+escapeHtml(rec.type)+' · '+escapeHtml(rec.stage)+'</div><div class="lead-meta">'+escapeHtml(step.name)+(career?' · Friction: '+escapeHtml(rec.applicationFriction||'Unverified'):'')+'</div>'+
       (career?'<div class="lead-meta">'+(contact?'Verified contact: '+escapeHtml(rec.person):'Hiring contact not verified')+'</div>':'')+
