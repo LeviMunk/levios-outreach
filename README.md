@@ -7,6 +7,17 @@
 
 ---
 
+## Employment and cleaning outreach workflow (Nov 18, 2026)
+
+- Employment shows unapplied, qualified roles first. Confirmed applied jobs remain in the encrypted vault but move into an **Applied** expandable section; later recruiter screen, interview, and offer stages remain there.
+- The career detail page no longer repeats Research source, Edit details, and Pass controls. The main Employment view retains its opportunity controls.
+- Gmail career review: when Gmail is connected, opening Employment initiates one read-only, recent-inbox subject/header scan; a manual **Check Gmail for interview messages** button is also available. The Gmail bridge v13 includes `reviewCareerInbox`, returns candidate recruiter/interview/scheduling metadata with tentative employer matching, and does not read bodies or change statuses. **It is not a background watcher or a confirmed interview detector.** User review in Gmail is required.
+- Cleaning practice outreach is restricted to businesses with verified distance at least 50 miles from Appleton. New discovery uses coordinates and a geographic gate; older businesses with local or unverified locations are held in the encrypted vault rather than deleted. The default discovery registry now targets Madison, Milwaukee, and Sheboygan rather than Fox Cities.
+- Cleaning drafts focus on quotes, repeat bookings, and customer reactivation, with an optional demo-link/video-call offer. Existing untouched, unapproved and unsent legacy cleaning drafts are updated on vault unlock; custom-edited or approved drafts are preserved. No claims of verified lost revenue, existing integrations, or completed demo features.
+- All sending remains manual and approval-gated. Gmail checks are read-only and should not be described as confirmed interviews without user review.
+
+---
+
 ## JobOS v0.4 · Four-workspace operating system (Nov 17, 2026)
 
 - **Employment:** employer-hosted job listings must achieve at least 75/100 using the shared rubric. High-friction/Workday submissions are excluded even when otherwise well matched. Local Fox Valley jobs get first priority, then confirmed Wisconsin-eligible remote jobs. Missing salary, application friction, and recruiter details remain explicitly unverified.
