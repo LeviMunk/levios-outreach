@@ -137,6 +137,11 @@ function renderLetter(p){
  }
  return pdf;
 }
+async function ensure(){
+ if(ready())return;
+ await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js';script.onload=resolve;script.onerror=()=>reject(Error('PDF engine could not load. Check browser network permissions.'));document.head.appendChild(script);});
+ if(!ready())throw Error('PDF engine did not initialize.');
+}
 function save(rec,kind){
  const key=keyFor(rec);if(!key)throw Error('No reviewed PDF package is available for this job yet.');
  if(!ready())throw Error('PDF engine is unavailable. Please reload JobOS and try again.');
@@ -146,13 +151,13 @@ function save(rec,kind){
 function recruiter(rec){const key=keyFor(rec);return key?JOBS[key].recruiter:null;}
 function message(rec,channel='LinkedIn'){
  const key=keyFor(rec);if(!key)return null;
- const p=JOBS[key],person=p.recruiter?.name,applied=!!rec.appliedDate;
+ const p=JOBS[key],person=p.recruiter?.name,applied=!!rec.appliedDate,organization=p.company.replace(/[.!?]+$/,'');
  const greet=person?'Hi '+person.split(' ')[0]+',':'Hello recruiting team,';
  if(channel==='LinkedIn'){
-  return greet+' '+(applied?'I just applied for':'I am interested in')+' the '+p.title+' role at '+p.company+'. My background is in marketing performance reporting, operations, and cross-team coordination. I would welcome the chance to connect. Thanks, Levi';
+  return greet+' '+(applied?'I just applied for':'I am interested in')+' the '+p.title+' role at '+organization+'. My background is in marketing performance reporting, operations, and cross-team coordination. I would welcome the chance to connect. Thanks, Levi';
  }
  return {subject:(applied?'Application submitted: ':'Interested in: ')+p.title,
- body:greet+'\n\n'+(applied?'I recently submitted my application for':'I am planning to apply for')+' the '+p.title+' position at '+p.company+'. My background combines marketing performance reporting, operations, and customer-lifecycle coordination. I would appreciate the opportunity to connect with the team responsible for this opening.\n\nThank you,\nLevi Van Stappen'};
+ body:greet+'\n\n'+(applied?'I recently submitted my application for':'I am planning to apply for')+' the '+p.title+' position at '+organization+'. My background combines marketing performance reporting, operations, and customer-lifecycle coordination. I would appreciate the opportunity to connect with the team responsible for this opening.\n\nThank you,\nLevi Van Stappen'};
 }
-window.JobOSDocuments={has:rec=>!!keyFor(rec),save,recruiter,message,filenameFor:(rec,kind)=>{const k=keyFor(rec);return k?filename(JOBS[k],kind):null;}};
+window.JobOSDocuments={has:rec=>!!keyFor(rec),save,ensure,recruiter,message,filenameFor:(rec,kind)=>{const k=keyFor(rec);return k?filename(JOBS[k],kind):null;}};
 })();
