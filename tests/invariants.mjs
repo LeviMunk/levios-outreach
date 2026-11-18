@@ -63,4 +63,8 @@ assert.match(documents,/downloadBoth/);
 assert.match(app,/function starterJobsPanel\(\)/);
 assert.match(app,/data-action="retryjobfeed"/);
 assert.match(app,/starterFeedStatus='error'/);
+assert.match(app,/visible\.filter\(r=>!isSent\(r\)\)/);
+assert.match(app,/const sentOutreach=!career\?records\.filter\(r=>isSent\(r\)\)/);
+assert.match(app,/const cards=filtered\(\)\.filter\(r=>!isSent\(r\)/);
+assert.match(app,/Removed from active outreach/);
 console.log('LeviOS security and workflow invariants passed');
