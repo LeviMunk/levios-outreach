@@ -14,7 +14,7 @@ const EDUCATION=[
  'Google Analytics Certification (GA4) | Google | October 2026',
  'B.S., Kinesiology | University of Wisconsin Oshkosh | 2013',
  'A.A.S., Digital Media Technologies | Northeast Wisconsin Technical College | 2009',
- 'A.A.S., Arts and Science | University of Wisconsin Fox Valley | 2012'
+ 'Associate of Arts and Science | University of Wisconsin Fox Valley | 2012'
 ];
 const JOBS={
  '5451111008':{
