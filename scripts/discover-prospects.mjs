@@ -5,14 +5,21 @@
 import {writeFileSync,mkdirSync} from 'node:fs';
 const ENDPOINT='https://overpass.kumi.systems/api/interpreter';
 const box={
-  'Fox Cities':[44.13,-88.55,44.34,-88.27]
+  'Madison':[42.99,-89.57,43.18,-89.23],
+  'Milwaukee':[42.92,-88.14,43.18,-87.85],
+  'Sheboygan':[43.66,-87.79,43.84,-87.65]
 };
+const origin=[44.2619,-88.4154];
+const distanceMiles=(lat,lon)=>{const rad=Math.PI/180,dLat=(lat-origin[0])*rad,dLon=(lon-origin[1])*rad,a=Math.sin(dLat/2)**2+Math.cos(origin[0]*rad)*Math.cos(lat*rad)*Math.sin(dLon/2)**2;return 3958.76*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));};
 const categories={office:'Professional services',shop:'Retail services',craft:'Trades and contractors',amenity:'Local services'};
 const today=()=>new Date().toISOString().slice(0,10);
 const host=v=>{try{const u=new URL(v);if(!['https:','http:'].includes(u.protocol))return '';return u.hostname.replace(/^www\./,'').toLowerCase()}catch{return ''}};
 const web=v=>{if(typeof v!=='string')return '';const s=v.trim();try{const u=new URL(s.startsWith('www.')?'https://'+s:s);return host(u.href)?u.href:''}catch{return ''}};
 const banned=/bakery|pastry|bread|alcohol|casino|tobacco|vape|pharmacy|medical|gun|firearm/i;
 export function candidate(element,city,stamp=today()){
+  const lat=element.lat??element.center?.lat,lon=element.lon??element.center?.lon;
+  // Strict geographic gate for newly discovered outreach prospects.
+  if(!Number.isFinite(lat)||!Number.isFinite(lon)||distanceMiles(lat,lon)<50)return null;
   const t=element?.tags||{};
   const name=String(t.name||'').trim(), site=web(t.website||t['contact:website']||'');
   if(!name||name.length>150||!site||!element?.id||!['node','way','relation'].includes(element.type))return null;
@@ -33,7 +40,7 @@ export function candidate(element,city,stamp=today()){
   const industry=cleaning?'Cleaning Services':kind==='office'?'Professional services':kind==='craft'?'Trades and contractors':kind==='shop'?'Retail services':'Local services';
   return {name,type:'Business',industry,location:city+', WI',website:site,email:validEmail,profile,channel:validEmail?'Email':(socialHost==='instagram.com'?'Instagram':'Other'),
     stage:'Researched',sourceUrl:`https://www.openstreetmap.org/${element.type}/${element.id}`,offerModule:'Customer Follow-Up & Revenue Dashboard',
-    researchDate:stamp,verification:'directory',angle:cleaning?'Hypothesis: repeat-booking reminders and customer reactivation may be valuable for cleaning services. No actual rebooking problem has been established.':`Explore whether a ${category} business could benefit from faster inquiry follow-up, conversion measurement, or customer reactivation; no site defect has been established.`,
+    distanceMiles:Math.round(distanceMiles(lat,lon)),researchDate:stamp,verification:'directory',angle:cleaning?'Hypothesis: repeat-booking reminders and customer reactivation may be valuable for cleaning services. No actual rebooking problem has been established.':`Explore whether a ${category} business could benefit from faster inquiry follow-up, conversion measurement, or customer reactivation; no site defect has been established.`,
     notes:'Contact route is published in OpenStreetMap directory tags and may be stale; confirm on business site or social profile before sending. No decision-maker identity inferred. © OpenStreetMap contributors; openstreetmap.org/copyright.'};
 }
 function query() {
