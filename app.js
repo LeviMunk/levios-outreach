@@ -359,8 +359,8 @@
     const channel=rec.channel==='LinkedIn'&&verifiedLinkedIn?'LinkedIn':rec.channel==='Email'&&verifiedEmail?'Email':verifiedEmail?'Email':verifiedLinkedIn?'LinkedIn':null;
     if(!channel)return null;
     const greet=firstName(rec.person),role=rec.jobTitle||'the open position';
-    if(channel==='LinkedIn')return {channel,subject:'',draft:'Hey '+greet+'! I just applied for the '+role+' role at '+rec.name+' and wanted to say hello. I\'ve spent a lot of time working where marketing and day-to-day business operations overlap, so the position caught my eye. Would love to connect! - Levi'};
-    return {channel,subject:'Hello about the '+role+' role',draft:'Hi '+greet+',\n\nI just applied for the '+role+' position at '+rec.name+' and thought I\'d reach out personally. My work has been a mix of marketing, reporting, and keeping operations moving, so this opportunity stood out to me.\n\nI\'d love to learn more about the team if you\'re open to connecting. You can see some of my work at levimunk.com.\n\nThanks!\nLevi'};
+    if(channel==='LinkedIn')return {channel,subject:'',draft:'Hey '+greet+'! I recently applied for the '+role+' role at '+rec.name+' and wanted to say hello. My background spans marketing, analytics, and operations, so the opportunity caught my attention. I would love to connect! - Levi'};
+    return {channel,subject:'Applied for '+role+' at '+rec.name,draft:'Hi '+greet+',\n\nI recently applied for the '+role+' position at '+rec.name+' and wanted to reach out personally.\n\nI work across marketing, analytics, and business operations, especially using data to make everyday processes and decisions easier. This position seems like a great fit for that experience.\n\nI would be happy to connect or answer any questions about my application. You can also see some of my work at levimunk.com.\n\nThanks for your time!\nLevi'};
   }
   const positiveReply = rec => state.activities.some(a=>a.recordId===rec.id&&a.kind==='replied'&&a.meta?.outcome==='positive');
   function readiness(rec){
@@ -481,7 +481,7 @@
         '<span class="small subtle">Verified email needed before Open Draft.</span>';
     }
     const recruiter=career?window.JobOSDocuments?.recruiter(r):null;
-    const recruiterPanel=career&&recruiter?'<section class="job-recruiter"><div class="eyebrow">RECRUITER OUTREACH</div><h3>'+escapeHtml(recruiter.name||'Hiring team contact')+'</h3><p class="small subtle">'+escapeHtml(recruiter.note||'A role-specific recruiter is not confirmed.')+'</p>'+
+    const recruiterPanel=career&&r.appliedDate&&recruiter?'<section class="job-recruiter"><div class="eyebrow">RECRUITER OUTREACH</div><h3>'+escapeHtml(recruiter.name||'Hiring team contact')+'</h3><p class="small subtle">'+escapeHtml(recruiter.note||'A role-specific recruiter is not confirmed.')+'</p>'+
       (recruiter.email?'<p class="small subtle">Public team inbox: '+escapeHtml(recruiter.email)+' · '+escapeHtml(recruiter.emailNote||'')+'</p>':'')+
       '<div class="simple-email"><span>LINKEDIN MESSAGE · '+(r.appliedDate?'POST-APPLICATION':'INTRODUCTION')+'</span><p>'+escapeHtml(window.JobOSDocuments.message(r,'LinkedIn'))+'</p></div>'+
       '<div class="simple-primary-actions"><button class="button button-secondary" data-action="copyrecruiter" data-id="'+escapeHtml(r.id)+'">Copy LinkedIn message</button>'+
@@ -805,7 +805,9 @@ async function saveStrategy(e){
   function openRecruiterEmail(id){
     const r=findRecord(id),contact=window.JobOSDocuments?.recruiter(r);
     if(!r||!contact?.email)return notify('No verified team email address is available.');
+    if(!r.appliedDate)return notify('Confirm your job application before opening a recruiter email about applying.');
     const m=window.JobOSDocuments.message(r,'Email');
+    if(!m)return notify('The post-application message is not available.');
     const url='https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(contact.email)+'&su='+encodeURIComponent(m.subject)+'&body='+encodeURIComponent(m.body);
     window.open(url,'_blank','noopener,noreferrer');
     notify('Gmail compose opened for the public recruiting inbox. Nothing was sent.');
