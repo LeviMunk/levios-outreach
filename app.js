@@ -289,10 +289,11 @@
     };
   }
   function businessDraft(rec){
-    const name=String(rec.name||'your business').trim(),p=businessPitch(rec);
+    const name=String(rec.name||'your business').trim(),cleaning=isCleaningBusiness(rec);
     const greeting=firstName(rec.person)?'Hi '+firstName(rec.person)+',':'Hi '+name+' team,';
-    return {subject:isCleaningBusiness(rec)?'Quick idea for '+name:'An idea for '+name,
-      draft:greeting+'\n\n'+p.hook+'\n\n'+p.idea+'\n\nIt is not meant to replace your booking system or add another complicated app. The goal is to make it easier to spot work worth following up on without spending more on ads.\n\nIf you are interested in seeing a demo, I would be happy to send a link or walk you through it on a quick video call.\n\nLevi'};
+    const intro=cleaning?'I build easy-to-use dashboards for cleaning services to track the full client journey, from the first inquiry and booking to the cleaning itself and keeping clients engaged over time.':'I build easy-to-use dashboards for service businesses to track customers from first inquiry through repeat bookings.';
+    const outcome=cleaning?'The goal is to spot potential revenue gaps while understanding which services and follow-ups keep clients coming back.':'The goal is to spot missed opportunities and see what keeps customers coming back.';
+    return {subject:'A dashboard idea for '+name,draft:greeting+'\n\n'+intro+'\n\n'+outcome+'\n\nThe dashboard is designed to work alongside the tools you already use, where integrations are available, and bring important metrics and next steps into one place.\n\nIf you are interested in seeing a demo, I would be happy to send a link or walk you through it on a quick video call.\n\nLevi'};
   }
   function businessSocialDraft(rec){
     const p=businessPitch(rec);
