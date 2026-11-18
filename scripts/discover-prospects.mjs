@@ -19,15 +19,22 @@ export function candidate(element,city,stamp=today()){
   const kind=Object.keys(categories).find(k=>t[k]&&t[k]!=='yes');
   if(!kind||banned.test([name,t.shop,t.amenity,t.office,t.craft].join(' ')))return null;
   // Exclude chains and generic directory/marketplace sites: relevant seller website only.
+  const email=String(t['contact:email']||t.email||'').trim().slice(0,160);
+  const validEmail=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)?email:'';
+  const possibleSocial=web(t['contact:instagram']||t['contact:facebook']||t['contact:linkedin']||t.facebook||t.instagram||'');
+  const socialHost=host(possibleSocial);
+  const profile=/^(instagram\.com|facebook\.com|linkedin\.com)$/.test(socialHost)?possibleSocial:'';
+  // A website alone is not an actionable outreach lead.
+  if(!validEmail&&!profile)return null;
   const websiteHost=host(site);
   if(!websiteHost||/(facebook|instagram|linktr.ee|yelp|google|wixsite|wordpress|maps\.apple)\./i.test(websiteHost))return null;
   const category=String(t[kind]).replace(/_/g,' ').slice(0,64);
   const cleaning=/clean(?:er|ing|ers)?|maid|housekeep|janitorial|carpet wash|window wash|power wash|pressure wash/i.test([name,category,t.shop,t.amenity,t.office,t.craft].join(' '));
   const industry=cleaning?'Cleaning Services':kind==='office'?'Professional services':kind==='craft'?'Trades and contractors':kind==='shop'?'Retail services':'Local services';
-  return {name,type:'Business',industry,location:city+', WI',website:site,email:'',channel:'Email',
-    stage:'Researched',sourceUrl:`https://www.openstreetmap.org/${element.type}/${element.id}`,offerModule:cleaning?'CleaningOS · Rebooking / Reactivation':'MunkOS · Inquiry Follow-up',
+  return {name,type:'Business',industry,location:city+', WI',website:site,email:validEmail,profile,channel:validEmail?'Email':(socialHost==='instagram.com'?'Instagram':'Other'),
+    stage:'Researched',sourceUrl:`https://www.openstreetmap.org/${element.type}/${element.id}`,offerModule:'Customer Follow-Up & Revenue Dashboard',
     researchDate:stamp,verification:'directory',angle:cleaning?'Hypothesis: repeat-booking reminders and customer reactivation may be valuable for cleaning services. No actual rebooking problem has been established.':`Explore whether a ${category} business could benefit from faster inquiry follow-up, conversion measurement, or customer reactivation; no site defect has been established.`,
-    notes:'Discovered via OpenStreetMap public tags in the Fox Cities region. Business website and suitability are directory evidence, not verified decision-maker contact information. © OpenStreetMap contributors; openstreetmap.org/copyright.'};
+    notes:'Contact route is published in OpenStreetMap directory tags and may be stale; confirm on business site or social profile before sending. No decision-maker identity inferred. © OpenStreetMap contributors; openstreetmap.org/copyright.'};
 }
 function query() {
   // Small, bounded queries once weekly; do not request contacts or private personal data.
@@ -61,5 +68,5 @@ if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
   if(!records.length)throw Error('No eligible directory prospects. Refusing empty research batch.');
   mkdirSync('research-output',{recursive:true});
   writeFileSync('research-output/business.json',JSON.stringify({records,strategies:[]},null,2));
-  console.log(`Collected ${records.length} directory-sourced candidates for review (no emails).`);
+  console.log(`Collected ${records.length} directory-sourced candidates with contact routes for review.`);
 }
