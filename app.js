@@ -261,7 +261,7 @@
     const suggested=rec.type==='Business'?businessDraft(rec):rec.type==='Career Outreach'?generalEmploymentDraft(rec):null;
     const draft=rec.draft||suggested?.draft||'',subject=rec.subject||suggested?.subject||'';
     const actions=career?
-      (!applied?'<button class="button button-primary button-small" data-action="prepareats" data-id="'+escapeHtml(rec.id)+'">Generate resume / cover letter</button>':'')+
+      (window.JobOSDocuments?.has(rec)?'<button class="button button-primary button-small" data-action="pdfresume" data-id="'+escapeHtml(rec.id)+'">Download resume PDF</button><button class="button button-secondary button-small" data-action="pdfcover" data-id="'+escapeHtml(rec.id)+'">Download cover letter PDF</button>':'<span class="small subtle">PDF package not prepared yet</span>')+
       (!applied?'<button class="button button-secondary button-small" data-action="applied" data-id="'+escapeHtml(rec.id)+'">Confirm applied</button>':'')+
       (applied&&contact?'<button class="button button-secondary button-small" data-action="recruiterdraft" data-id="'+escapeHtml(rec.id)+'">Recruiter message</button>':''):
       (!rec.draft&&suggested?'<button class="button button-primary button-small" data-action="savedraft" data-id="'+escapeHtml(rec.id)+'">Save suggested draft</button>':'')+
