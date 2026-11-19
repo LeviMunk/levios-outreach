@@ -14,11 +14,15 @@ jobs:
       - name: JavaScript syntax
         run: |
           node --check app.js
+          node --check jobos-apply.js
+          node --check extension/content.js
+          node --check extension/popup.js
           node --check cloud.js
           node --check supabase/functions/gmail-bridge/index.mjs
       - name: Security invariants
         run: |
           node tests/invariants.mjs
+          node --test tests/apply-core.test.mjs
           node --test tests/research-pack.test.mjs tests/discovery.test.mjs
           node --check scripts/discover-prospects.mjs
           node --check scripts/submit-oidc-research.mjs
