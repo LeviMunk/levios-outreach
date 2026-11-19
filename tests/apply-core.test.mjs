@@ -43,3 +43,29 @@ test('only individually verified history is exported; invalid or unverified date
  assert.equal(api.entryValue(pack.experience,'experience',1,'company'),'');
  assert.equal(api.parsePackage(pack).experience.length,1);
 });
+
+test('Smart Answer Vault reuses related approved answers without inventing qualifications',()=>{
+ const answers=[
+  {question:'Describe your marketing analytics experience',answer:'I review content performance and adjust plans.',verifiedAt:'2026-11-19T00:00:00Z'},
+  {question:'Describe your leadership experience',answer:'I led a team.',verifiedAt:''}
+ ];
+ const candidate=api.suggestAnswer('Explain how you use analytics to make decisions',answers,[]);
+ assert.equal(candidate.source,'related-approved-answer');
+ assert.equal(candidate.draft,'I review content performance and adjust plans.');
+ assert.equal(api.relatedAnswers(answers,'Describe your leadership skills').length,0);
+ assert.equal(api.matchingAnswer(answers,'Explain how you use analytics to make decisions'),null);
+});
+test('Smart Answer Vault only uses verified history for experience-based rough drafts',()=>{
+ const history=[
+  {company:'Unverified Ltd',title:'Director',description:'Led 100 people'},
+  {company:'Example Studio',title:'Coordinator',description:'Reviewed campaign performance.',verifiedAt:'2026-11-19T00:00:00Z'}
+ ];
+ const draft=api.suggestAnswer('Describe your analytics experience',[],history);
+ assert.match(draft.draft,/Coordinator at Example Studio/);
+ assert.doesNotMatch(draft.draft,/100 people/);
+ assert.equal(api.suggestAnswer('Describe your analytics experience',[],history.slice(0,1)).source,'needs-facts');
+});
+test('Smart Answer Vault blocks legal and sensitive questions',()=>{
+ assert.equal(api.suggestAnswer('Are you legally authorized to work in the United States?',[],[]).source,'blocked');
+ assert.equal(api.relatedAnswers([{question:'Tell us about salary',answer:'$1',verifiedAt:'2026-11-19'}],'Expected salary?').length,0);
+});
