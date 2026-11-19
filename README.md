@@ -1,3 +1,19 @@
+## JobOS Apply Phase 1 (Nov 18, 2026)
+
+**Status:** Implemented in source. Live availability depends on website publishing and browser verification.
+
+- Open **More tools → Workspace management → JobOS Apply** after unlocking your JobOS vault.
+- Enter real contact/profile facts, check the verification box, and click **Verify & save profile**. The data stays inside the existing encrypted vault, not in GitHub.
+- Add verified screening answers. Only exact-question, non-sensitive responses are exported. Salary, citizenship, work authorization, sponsorship, EEO, criminal history, consent and other sensitive/legal fields are always manual.
+- Click **Copy verified autofill data**. It puts plaintext information on the clipboard temporarily; clear the clipboard after importing.
+- On desktop Chrome open chrome://extensions, enable Developer mode, click **Load unpacked**, then select this repository's extension folder. In the popup paste the export and choose **Load for this session**.
+- Open a supported Greenhouse, Lever or Ashby application and choose **Fill current application** from the toolbar. Review every field. Upload PDF documents and click Submit yourself.
+- Extension information is stored in Chrome session storage, cleared on browser restart or using **Clear**; the extension never has your vault passphrase, crypto key or access to the local encrypted vault.
+- Tests: node --test tests/apply-core.test.mjs ; npm install --no-save playwright@1.58.2 ; npx playwright install chromium ; node scripts/test-jobos-apply-browser.mjs
+
+**Phase 1 exclusions:** Auto-submit, account signup, CAPTCHA handling, PDF uploads, AI-fabricated screening answers, mobile Chrome extension use, seamless vault/extension pairing, universal ATS compatibility.
+
+---
 ## JobOS document download reliability (Nov 18, 2026)
 
 - Employment opportunity cards now expose a **Download both PDFs** action alongside separate résumé and cover-letter fallback buttons for reviewed packages.
