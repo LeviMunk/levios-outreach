@@ -1,0 +1,31 @@
+name: JobOS Apply checks
+on:
+  push:
+    branches:
+      - feat/jobos-smart-answer-vault
+      - main
+  pull_request:
+    paths:
+      - 'jobos-apply.js'
+      - 'extension/**'
+      - 'app.js'
+      - 'tests/apply-core.test.mjs'
+      - '.github/workflows/jobos-apply-checks.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: |
+          node --check app.js
+          node --check jobos-apply.js
+          node --check extension/content.js
+          node --check extension/jobos-apply.js
+      - name: Run JobOS Apply unit tests
+        run: node --test tests/apply-core.test.mjs

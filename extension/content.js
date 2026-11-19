@@ -143,7 +143,11 @@
      const label=labelFor(el);
      if(deny.test(label)||JobOSApply.isSensitiveQuestion(label)){skipped++;continue;}
      const key=fieldFor(el,label);
-     const value=historyField(label,parsed)||(key==='fullName'?[parsed.profile.firstName,parsed.profile.lastName].filter(Boolean).join(' '):key&&parsed.profile[key])||label.split(' | ').map(part=>JobOSApply.matchingAnswer(parsed.answers,part)).find(Boolean);
+     const exact=label.split(' | ').map(part=>JobOSApply.matchingAnswer(parsed.answers,part)).find(Boolean);
+     // For open-ended textareas only, offer related user-verified wording as a rough editable draft.
+     // This never applies to yes/no, select, legal, salary or demographic questions.
+     const related=el.tagName==='TEXTAREA'&&!exact&&/\b(?:describe|tell us|explain|how have you|share an example|discuss)\b/i.test(label)?JobOSApply.relatedAnswers(parsed.answers,label.split(' | ').find(part=>/\b(?:describe|tell us|explain|how have you|share an example|discuss)\b/i.test(part))||label):[];
+     const value=historyField(label,parsed)||(key==='fullName'?[parsed.profile.firstName,parsed.profile.lastName].filter(Boolean).join(' '):key&&parsed.profile[key])||exact||related[0]?.answer;
      if(!value){skipped++;continue;}
      if(updateValue(el,value))filled++;else skipped++;
    }
