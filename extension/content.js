@@ -21,8 +21,9 @@
    for(const x of [el.getAttribute('aria-label'),el.getAttribute('placeholder'),el.getAttribute('name'),el.id])if(x)parts.push(x);
    const labelIds=el.getAttribute('aria-labelledby');
    if(labelIds)for(const id of labelIds.split(/\s+/)){const node=document.getElementById(id);if(node)parts.push(node.textContent||'');}
-   if(el.labels)for(const lbl of el.labels)parts.push(lbl.textContent||'');
-   const outer=el.closest('label');if(outer)parts.push(outer.textContent||'');
+   const labelText=lbl=>{const copy=lbl.cloneNode(true);for(const item of copy.querySelectorAll('input,select,textarea,button,option'))item.remove();return copy.textContent?.trim()||'';};
+   if(el.labels)for(const lbl of el.labels)parts.push(labelText(lbl));
+   const outer=el.closest('label');if(outer)parts.push(labelText(outer));
    return parts.join(' | ').trim().slice(0,500);
  }
  function fieldFor(el,label){
