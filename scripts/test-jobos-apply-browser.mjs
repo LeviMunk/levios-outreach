@@ -14,7 +14,7 @@ const pack={
 };
 const fixtures=[
  {name:'Greenhouse',markup:'<form><label>First Name<input name="first_name"></label><label>Last Name<input name="last_name"></label><label>Email<input name="email" type="email"></label><label>Which analytics tools have you used?<textarea name="question_1"></textarea></label><label>Are you legally authorized to work in the US?<input name="authorization"></label><label>Upload Resume<input type="file"></label><button type="submit">Submit Application</button></form>',expected:4},
- {name:'Lever',markup:'<form><label>First name<input name="applicant_first_name"></label><label>Last name<input name="applicant_last_name"></label><label>Email<input name="email"></label><label>Phone<input name="phone"></label><label>Expected salary<input name="salary"></label><button type="submit">Submit</button></form>',expected:4},
+ {name:'Lever',markup:'<form><label>First name<input name="applicant_first_name"></label><label>Last name<input name="applicant_last_name"></label><label>Email<input name="email"></label><label>Phone<input name="phone"></label><label>Full Name<input name="name"></label><label>Expected salary<input name="salary"></label><button type="submit">Submit</button></form>',expected:5},
  {name:'Ashby',markup:'<form><input aria-label="First Name" id="first"><input aria-label="Last Name" id="last"><input aria-label="Email Address" id="email"><input aria-label="LinkedIn URL" id="linkedin"><input aria-label="Personal website" id="site"><label>Which analytics tools have you used?<textarea name="essay"></textarea></label><label>Veteran Status<select><option value="">Select</option><option>Yes</option></select></label><button type="submit">Apply</button></form>',expected:6}
 ];
 try{
@@ -30,6 +30,7 @@ try{
   assert.deepEqual(failures,[],fixture.name+' browser errors');
   assert.equal(output.ok,true,fixture.name+' returned error '+JSON.stringify(output));
   assert.equal(output.filled,fixture.expected,fixture.name+' wrong fill count '+JSON.stringify(values));
+  if(fixture.name==='Lever')assert.equal(values.find(x=>x.name==='name').value,'Test Candidate');
   assert.equal(await page.evaluate(()=>window.__submitCount),0,'Extension must never submit');
   const question=values.find(x=>x.question.includes('Which analytics tools'));
   if(question)assert.equal(question.value,'Google Analytics and Excel');
