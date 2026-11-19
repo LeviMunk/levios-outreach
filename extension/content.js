@@ -107,6 +107,30 @@
    el.dispatchEvent(new Event('change',{bubbles:true}));
    return true;
  }
+ function fillVerifiedRadioGroups(answers){
+   let changed=0,skipped=0;
+   for(const group of document.querySelectorAll('fieldset')){
+     const legend=group.querySelector('legend');
+     const question=legend?.textContent?.trim()||'';
+     if(!question||deny.test(question)||JobOSApply.isSensitiveQuestion(question)){skipped++;continue;}
+     const answer=JobOSApply.matchingAnswer(answers,question);
+     if(!answer)continue;
+     const radios=[...group.querySelectorAll('input[type="radio"]')].filter(el=>!el.disabled);
+     if(!radios.length||radios.some(el=>el.checked)){skipped++;continue;}
+     const matches=radios.filter(el=>{
+       const label=el.labels?.[0]?.textContent?.trim()||el.value||'';
+       return label.toLowerCase()===answer.toLowerCase()||el.value.toLowerCase()===answer.toLowerCase();
+     });
+     if(matches.length!==1){skipped++;continue;}
+     const el=matches[0];
+     const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'checked')?.set;
+     if(setter)setter.call(el,true);else el.checked=true;
+     el.dispatchEvent(new Event('input',{bubbles:true}));
+     el.dispatchEvent(new Event('change',{bubbles:true}));
+     changed++;
+   }
+   return {changed,skipped};
+ }
  function fill(pack){
    const parsed=JobOSApply.parsePackage(pack);
    const els=[...document.querySelectorAll('input,textarea,select')];
@@ -114,7 +138,7 @@
    for(const el of els){
      if(el.disabled||el.readOnly||el.type==='hidden'||el.type==='password'||el.type==='file'||el.type==='submit'||el.type==='button'||el.type==='radio'||el.type==='checkbox'||el.type==='date'||el.type==='number'){skipped++;continue;}
      if(!['INPUT','TEXTAREA','SELECT'].includes(el.tagName)||(!['','text','email','tel','url','search'].includes(el.type||'')&&el.tagName==='INPUT')){skipped++;continue;}
-     if(el.value?.trim()){skipped++;continue;} // never overwrite applicant edits
+     if(el.value?.trim()&&!(el.tagName==='SELECT'&&(!el.selectedIndex||/^(?:select|choose|please select|--|n\/a)$/i.test(el.value.trim())))){skipped++;continue;} // never overwrite applicant edits
      const label=labelFor(el);
      if(deny.test(label)||JobOSApply.isSensitiveQuestion(label)){skipped++;continue;}
      const key=fieldFor(el,label);
@@ -122,6 +146,7 @@
      if(!value){skipped++;continue;}
      if(updateValue(el,value))filled++;else skipped++;
    }
+   const radio=fillVerifiedRadioGroups(parsed.answers);filled+=radio.changed;skipped+=radio.skipped;
    return {ok:true,filled,skipped};
  }
  chrome.runtime.onMessage.addListener((msg,sender,reply)=>{
