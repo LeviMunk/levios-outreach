@@ -26,6 +26,8 @@
    return parts.join(' | ').trim().slice(0,500);
  }
  function fieldFor(el,label){
+   const segments=label.split(' | ').map(t=>t.trim().toLowerCase());
+   if(segments.some(t=>/^(?:full[\s_-]*name|name|applicant[\s_-]*name)$/.test(t))&&!/company|employer|reference|supervisor/i.test(label))return 'fullName';
    const ac=(el.getAttribute('autocomplete')||'').toLowerCase();
    const byAuto={'given-name':'firstName','family-name':'lastName','email':'email','tel':'phone','address-level2':'city','address-level1':'state','postal-code':'postalCode'};
    if(byAuto[ac])return byAuto[ac];
@@ -57,7 +59,7 @@
      const label=labelFor(el);
      if(deny.test(label)||JobOSApply.isSensitiveQuestion(label)){skipped++;continue;}
      const key=fieldFor(el,label);
-     const value=(key&&parsed.profile[key])||label.split(' | ').map(part=>JobOSApply.matchingAnswer(parsed.answers,part)).find(Boolean);
+     const value=(key==='fullName'?[parsed.profile.firstName,parsed.profile.lastName].filter(Boolean).join(' '):key&&parsed.profile[key])||label.split(' | ').map(part=>JobOSApply.matchingAnswer(parsed.answers,part)).find(Boolean);
      if(!value){skipped++;continue;}
      if(updateValue(el,value))filled++;else skipped++;
    }
