@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "JobOS Apply",
+  "version": "0.1.0",
+  "description": "Review-first JobOS application form autofill for Greenhouse, Lever, and Ashby.",
+  "action": {
+    "default_title": "JobOS Apply",
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://boards.greenhouse.io/*",
+    "https://job-boards.greenhouse.io/*",
+    "https://jobs.lever.co/*",
+    "https://apply.lever.co/*",
+    "https://jobs.ashbyhq.com/*",
+    "https://*.ashbyhq.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://boards.greenhouse.io/*",
+        "https://job-boards.greenhouse.io/*",
+        "https://jobs.lever.co/*",
+        "https://apply.lever.co/*",
+        "https://jobs.ashbyhq.com/*",
+        "https://*.ashbyhq.com/*"
+      ],
+      "js": [
+        "jobos-apply.js",
+        "content.js"
+      ],
+      "all_frames": true,
+      "run_at": "document_idle"
+    }
+  ]
+}
