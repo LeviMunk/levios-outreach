@@ -34,6 +34,65 @@
    for(const [key,pattern] of patterns)if(pattern.test(' '+label+' '))return key;
    return null;
  }
+ function historyField(label,pack){
+   const text=String(label||'').toLowerCase().replace(/[_-]/g,' ');
+   // Never map unlabeled or ambiguous history inputs to an arbitrary employer or school.
+   const work=/(?:employment|work experience|experience|previous employer|job history)/i.test(text);
+   const school=/(?:education|school history|academic|institution|university)/i.test(text);
+   if(work===school)return '';
+   const source=work?pack.experience:pack.education;
+   const numeric=text.match(/(?:employment|work experience|experience|education|school history|academic)(?:\s*\[|\s+|_)(\d+)(?:\s*\]|(?:\s|_))/i);
+   // Counted labels are one-based, explicit bracket-index selectors are zero-based.
+   const zeroIndex=text.match(/(?:experience|education)\s*\[\s*(\d+)\s*\]/i);
+   const index=zeroIndex?Number(zeroIndex[1]):numeric?Number(numeric[1])-1:-1;
+   if(index<0||index>=source.length)return '';
+   const mapping=work?[
+     ['company',/\b(?:company|employer|organization)\b/],
+     ['title',/\b(?:title|position|job role)\b/],
+     ['location',/\blocation\b/],
+     ['startDate',/\b(?:start|from)\b/],
+     ['endDate',/\b(?:end|to date)\b/],
+     ['description',/\b(?:description|responsibilities|duties)\b/]
+   ]:[
+     ['school',/\b(?:school|institution|university|college)\b/],
+     ['degree',/\b(?:degree|credential|qualification)\b/],
+     ['field',/\b(?:major|field of study|discipline)\b/],
+     ['startDate',/\b(?:start|from)\b/],
+     ['endDate',/\b(?:end|graduation|completed)\b/]
+   ];
+   const matches=mapping.filter(([,pattern])=>pattern.test(text));
+   return matches.length===1?String(source[index]?.[matches[0][0]]||''):'';
+ }
+ function attachDocument(kind,documentInfo){
+   if(!['resume','coverLetter'].includes(kind)||!documentInfo)return {ok:false,error:'Document type is not supported.'};
+   const filename=String(documentInfo.name||'');
+   const mime=String(documentInfo.type||'');
+   const bytes=documentInfo.bytes;
+   if(!/^[\w .()\-]+$/.test(filename)||!/\.(?:pdf|docx?)$/i.test(filename)||!Array.isArray(bytes)||bytes.length<1||bytes.length>3*1024*1024||!bytes.every(n=>Number.isInteger(n)&&n>=0&&n<=255))
+     return {ok:false,error:'Select a PDF, DOC, or DOCX file up to 3 MB.'};
+   const inputs=[...document.querySelectorAll('input[type="file"]')].filter(el=>!el.disabled);
+   const targets=inputs.filter(el=>{
+     const label=labelFor(el);
+     if(deny.test(label))return false;
+     return kind==='resume'?/\b(?:resume|résumé|curriculum vitae|cv)\b/i.test(label):/\b(?:cover[\s_-]*letter|motivation[\s_-]*letter)\b/i.test(label);
+   });
+   if(targets.length!==1)return {ok:false,error:targets.length?'Multiple matching upload fields found; attach manually.':'No uniquely labeled '+(kind==='resume'?'résumé':'cover letter')+' upload field found; attach manually.'};
+   const input=targets[0];
+   if(input.files?.length)return {ok:false,error:'Upload field already contains a file; nothing replaced.'};
+   if(input.accept){
+     const accept=input.accept.toLowerCase();
+     if(!accept.includes('pdf')&&!accept.includes('doc')&&!accept.includes('application/')&&!accept.includes('*'))return {ok:false,error:'The employer upload field may not accept this document type.'};
+   }
+   try{
+     const type=mime||(/\.pdf$/i.test(filename)?'application/pdf':'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+     const file=new File([new Uint8Array(bytes)],filename,{type});
+     const transfer=new DataTransfer();transfer.items.add(file);
+     input.files=transfer.files;
+     input.dispatchEvent(new Event('input',{bubbles:true}));
+     input.dispatchEvent(new Event('change',{bubbles:true}));
+     return {ok:true,filename,attached:input.files?.length===1};
+   }catch(e){return {ok:false,error:'This site blocked automatic file attachment: '+e.message};}
+ }
  function updateValue(el,value){
    if(el.tagName==='SELECT'){
      const option=[...el.options].find(o=>o.value.toLowerCase()===value.toLowerCase()||o.textContent.trim().toLowerCase()===value.toLowerCase());
@@ -59,14 +118,14 @@
      const label=labelFor(el);
      if(deny.test(label)||JobOSApply.isSensitiveQuestion(label)){skipped++;continue;}
      const key=fieldFor(el,label);
-     const value=(key==='fullName'?[parsed.profile.firstName,parsed.profile.lastName].filter(Boolean).join(' '):key&&parsed.profile[key])||label.split(' | ').map(part=>JobOSApply.matchingAnswer(parsed.answers,part)).find(Boolean);
+     const value=historyField(label,parsed)||(key==='fullName'?[parsed.profile.firstName,parsed.profile.lastName].filter(Boolean).join(' '):key&&parsed.profile[key])||label.split(' | ').map(part=>JobOSApply.matchingAnswer(parsed.answers,part)).find(Boolean);
      if(!value){skipped++;continue;}
      if(updateValue(el,value))filled++;else skipped++;
    }
    return {ok:true,filled,skipped};
  }
  chrome.runtime.onMessage.addListener((msg,sender,reply)=>{
-   if(msg?.type!=='JOBOS_APPLY_FILL')return;
-   try{reply(fill(msg.pack));}catch(e){reply({ok:false,error:e.message});}
+   if(msg?.type!=='JOBOS_APPLY_FILL'&&msg?.type!=='JOBOS_APPLY_ATTACH')return;
+   try{reply(msg.type==='JOBOS_APPLY_FILL'?fill(msg.pack):attachDocument(msg.kind,msg.document));}catch(e){reply({ok:false,error:e.message});}
  });
 })();
