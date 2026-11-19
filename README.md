@@ -1,3 +1,14 @@
+## JobOS Apply Phase 2 (Nov 19, 2026)
+
+- Under **More tools → Workspace management → JobOS Apply**, add individually reviewed employment and education entries. Confirm each entry before saving. Dates should be YYYY or YYYY-MM; Present is allowed for a current job.
+- History stays in the existing encrypted vault and transfers to the extension only when you click **Copy verified autofill data**. No personal career details are checked into GitHub.
+- Supported form mapping requires an explicit index, e.g. `experience[0][company]` or `Education 1 Degree`. Unindexed/ambiguous employer and education fields remain untouched.
+- Saved screening answers now support text, select menus and fieldset radio groups when the exact question and option match a verified answer. Authorization, sponsorship, salary, consent and demographic answers stay manual.
+- In the Chrome extension, select a tailored PDF/DOC/DOCX résumé or cover letter (up to 3 MB) and click the corresponding **Attach** button. Attachments only target one clearly labeled empty file input; ambiguous or occupied targets are left for manual upload. Files are not persisted by the extension.
+- Every submission remains manual. The extension does not sign attestations, create accounts, bypass CAPTCHA or click Submit.
+- Browser integration fixtures cover Greenhouse, Lever, Ashby, indexed histories, non-sensitive choice questions and explicit uploads. Real forms vary, and website-specific failures require checking the actual employer page.
+
+---
 ## JobOS Apply Phase 1 (Nov 18, 2026)
 
 **Status:** Implemented in source. Live availability depends on website publishing and browser verification.
