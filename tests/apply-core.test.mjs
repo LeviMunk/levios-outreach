@@ -27,3 +27,19 @@ test('extension imports only the expected validated format',()=>{
  assert.equal(api.isSensitiveQuestion('Are you legally authorized to work in the US?'),true);
  assert.equal(api.isSensitiveQuestion('Expected salary?'),true);
 });
+
+test('only individually verified history is exported; invalid or unverified dates are rejected',()=>{
+ const experience=[
+  {company:'Example LLC',title:'Marketing Coordinator',startDate:'2025-08',endDate:'Present',description:'Verified campaign coordination',verifiedAt:'2026-11-19T00:00:00Z'},
+  {company:'Unverified LLC',title:'Manager',startDate:'2020-01',endDate:'2021-01'},
+  {company:'Unknown Dates LLC',title:'Assistant',startDate:'last summer',verifiedAt:'2026-11-19T00:00:00Z'}
+ ];
+ const education=[{school:'Example University',degree:'Bachelors',field:'Media',endDate:'2013-05',verifiedAt:'2026-11-19T00:00:00Z'}];
+ const pack=api.packageForExtension({firstName:'Test',lastName:'User',email:'test@example.com'},[],experience,education);
+ assert.equal(pack.experience.length,1);
+ assert.equal(pack.education.length,1);
+ assert.equal(api.entryValue(pack.experience,'experience',0,'title'),'Marketing Coordinator');
+ assert.equal(api.entryValue(pack.education,'education',0,'field'),'Media');
+ assert.equal(api.entryValue(pack.experience,'experience',1,'company'),'');
+ assert.equal(api.parsePackage(pack).experience.length,1);
+});
