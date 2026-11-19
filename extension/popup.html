@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JobOS Apply</title>
+<style>
+:root{color-scheme:dark;font:14px system-ui,sans-serif;background:#101b26;color:#ecf7fb}
+body{width:340px;margin:0;padding:18px;box-sizing:border-box}
+h1{font-size:20px;margin:0 0 6px} p{color:#b6c5cf;line-height:1.5}
+textarea{width:100%;min-height:100px;box-sizing:border-box;background:#182936;color:white;border:1px solid #455769;border-radius:8px;padding:9px;font:12px monospace}
+button{background:#caff67;color:#142112;font-weight:700;border:0;border-radius:8px;padding:11px;cursor:pointer}
+button.secondary{background:#263848;color:#e7f1fa;border:1px solid #455569}
+button:disabled{opacity:.5;cursor:default}.actions{display:flex;gap:8px;flex-wrap:wrap}
+small{color:#a6b6bf}.status{margin:12px 0;white-space:pre-line;line-height:1.45}
+</style></head><body>
+<h1>JobOS Apply</h1>
+<p>1. Unlock <a href="https://levimunk.com/jobos/" target="_blank" rel="noopener noreferrer">JobOS</a> → More tools → Workspace management → JobOS Apply, then copy verified autofill data.</p>
+<textarea id="data" spellcheck="false" placeholder="Paste verified JobOS Apply export here."></textarea>
+<div class="actions" style="margin:10px 0"><button id="load">Load for this session</button><button class="secondary" id="clear">Clear</button></div>
+<p>2. Open a Greenhouse, Lever, or Ashby application. Click Fill; review every field and upload files yourself.</p>
+<div class="actions"><button id="fill">Fill current application</button></div>
+<div class="status" id="status" aria-live="polite"></div>
+<small>No submission, account creation, external API calls, or persistent storage. Auto-fill won't attach PDFs or answer sensitive questions.</small>
+<script src="jobos-apply.js"></script><script src="popup.js"></script>
+</body></html>
