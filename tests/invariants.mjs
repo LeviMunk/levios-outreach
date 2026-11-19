@@ -83,4 +83,7 @@ assert.match(app,/target\.personal\?'Hi '\+target\.person/);
 assert.match(app,/const cc=String\(r\.cc\|\|''\)/);
 assert.match(documents,/function recipientIsPersonal\(address\)/);
 assert.match(documents,/verifiedPerson\?'Hi '\+verifiedPerson/);
+assert.match(app,/TRUSTED_LOCK_FLAG/);
+assert.match(app,/localStorage\.setItem\(TRUSTED_LOCK_FLAG,'1'\)/);
+assert.match(app,/localStorage\.getItem\(TRUSTED_LOCK_FLAG\)==='1'/);
 console.log('LeviOS security and workflow invariants passed');
