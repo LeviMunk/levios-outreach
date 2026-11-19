@@ -32,5 +32,21 @@
    show(response.filled+' field(s) filled. '+response.skipped+' left untouched. Review the entire application, upload documents, and submit manually.');
   }catch(error){show(error.message);}
  });
+ async function attach(kind,id){
+  const input=$(id),file=input.files?.[0];
+  if(!file)return show('Select a tailored '+(kind==='resume'?'résumé':'cover letter')+' first.');
+  if(file.size>3*1024*1024||file.size<1||!/\.(?:pdf|docx?)$/i.test(file.name))return show('Use a PDF, DOC or DOCX file up to 3 MB.');
+  try{
+    const [tab]=await chrome.tabs.query({active:true,currentWindow:true});
+    if(!tab?.id||!allowed(tab.url))throw Error('Open a supported application form first.');
+    const bytes=Array.from(new Uint8Array(await file.arrayBuffer()));
+    const response=await chrome.tabs.sendMessage(tab.id,{type:'JOBOS_APPLY_ATTACH',kind,document:{name:file.name,type:file.type,bytes}});
+    if(!response?.ok||!response?.attached)throw Error(response?.error||'Attachment not confirmed by application form.');
+    input.value='';
+    show('Attached '+file.name+' to a matching field. Review the uploaded file and submit manually.');
+  }catch(error){show('Not attached: '+error.message);}
+ }
+ $('attach-resume').addEventListener('click',()=>attach('resume','resume-file'));
+ $('attach-cover').addEventListener('click',()=>attach('coverLetter','cover-file'));
  restore().catch(e=>show('Session storage unavailable: '+e.message));
 })();
