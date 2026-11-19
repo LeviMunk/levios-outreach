@@ -10,13 +10,14 @@ const pack={
   city:'Appleton',state:'WI',postalCode:'54911',linkedinUrl:'https://www.linkedin.com/in/test',
   portfolioUrl:'https://example.com',currentCompany:'Example Co',currentTitle:'Marketing Analyst'
  },
- answers:[{question:'Which analytics tools have you used?',answer:'Google Analytics and Excel',verifiedAt:'2026-11-18T23:00:00Z'}],
+ answers:[{question:'Which analytics tools have you used?',answer:'Google Analytics and Excel',verifiedAt:'2026-11-18T23:00:00Z'},{question:'Which workflow tool have you used?',answer:'Make',verifiedAt:'2026-11-19T00:00:00Z'}],
  experience:[{company:'Example Co',title:'Marketing Analyst',location:'Appleton',startDate:'2025-08',endDate:'Present',description:'Reporting and analytics',verifiedAt:'2026-11-19T00:00:00Z'}],
  education:[{school:'Test University',degree:'Bachelor of Science',field:'Media',startDate:'2010-09',endDate:'2014-05',verifiedAt:'2026-11-19T00:00:00Z'}]
 };
 const fixtures=[
  {name:'Greenhouse',markup:'<form><label>First Name<input name="first_name"></label><label>Last Name<input name="last_name"></label><label>Email<input name="email" type="email"></label><label>Which analytics tools have you used?<textarea name="question_1"></textarea></label><label>Are you legally authorized to work in the US?<input name="authorization"></label><label>Upload Resume<input type="file"></label><button type="submit">Submit Application</button></form>',expected:4},
  {name:'Lever',markup:'<form><label>First name<input name="applicant_first_name"></label><label>Last name<input name="applicant_last_name"></label><label>Email<input name="email"></label><label>Phone<input name="phone"></label><label>Full Name<input name="name"></label><label>Expected salary<input name="salary"></label><button type="submit">Submit</button></form>',expected:5},
+ {name:'Screening choices',markup:'<form><label>Which workflow tool have you used?<select name="tools"><option value="">Choose</option><option>Make</option><option>Zapier</option></select></label><fieldset><legend>Which workflow tool have you used?</legend><label><input type="radio" name="choice" value="Make">Make</label><label><input type="radio" name="choice" value="Zapier">Zapier</label></fieldset><fieldset><legend>Are you legally authorized to work in the US?</legend><label><input type="radio" name="legal" value="Yes">Yes</label><label><input type="radio" name="legal" value="No">No</label></fieldset><button type="submit">Submit</button></form>',expected:2},
  {name:'History',markup:'<form><label>Experience 1 Company<input name="experience[0][company]"></label><label>Experience 1 Title<input name="experience[0][title]"></label><label>Experience 1 Start<input name="experience[0][start]"></label><label>Education 1 School<input name="education[0][school]"></label><label>Education 1 Degree<input name="education[0][degree]"></label><label>Education 1 Field of study<input name="education[0][field]"></label><label>Experience 2 Company<input name="experience[1][company]"></label><button type="submit">Submit</button></form>',expected:6},
  {name:'Ashby',markup:'<form><input aria-label="First Name" id="first"><input aria-label="Last Name" id="last"><input aria-label="Email Address" id="email"><input aria-label="LinkedIn URL" id="linkedin"><input aria-label="Personal website" id="site"><label>Which analytics tools have you used?<textarea name="essay"></textarea></label><label>Veteran Status<select><option value="">Select</option><option>Yes</option></select></label><button type="submit">Apply</button></form>',expected:6}
 ];
@@ -34,6 +35,7 @@ try{
   assert.equal(output.ok,true,fixture.name+' returned error '+JSON.stringify(output));
   assert.equal(output.filled,fixture.expected,fixture.name+' wrong fill count '+JSON.stringify(values));
   if(fixture.name==='Lever')assert.equal(values.find(x=>x.name==='name').value,'Test Candidate');
+  if(fixture.name==='Screening choices'){assert.equal(values.find(x=>x.name==='tools').value,'Make');assert.equal(await page.locator('input[name="choice"][value="Make"]').isChecked(),true);assert.equal(await page.locator('input[name="legal"]:checked').count(),0);}
   if(fixture.name==='History'){assert.equal(values.find(x=>x.name==='experience[0][company]').value,'Example Co');assert.equal(values.find(x=>x.name==='education[0][degree]').value,'Bachelor of Science');assert.equal(values.find(x=>x.name==='experience[1][company]').value,'');}
   assert.equal(await page.evaluate(()=>window.__submitCount),0,'Extension must never submit');
   const question=values.find(x=>x.question.includes('Which analytics tools'));
