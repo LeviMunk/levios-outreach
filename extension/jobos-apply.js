@@ -38,7 +38,8 @@
   }
   function packageForExtension(profile,answers){
     const normalized=normalizeProfile(profile);
-    if(validProfile(normalized).length)throw Error('Fix profile validation errors before copying.');
+    const validationErrors=validProfile(normalized);
+    if(validationErrors.length)throw Error(validationErrors.join(' '));
     const checked=normalizeAnswers(answers).filter(x=>x.verifiedAt);
     return {format:VERSION,createdAt:new Date().toISOString(),profile:normalized,answers:checked};
   }
