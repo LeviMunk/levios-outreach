@@ -17,7 +17,15 @@ small{color:#a6b6bf}.status{margin:12px 0;white-space:pre-line;line-height:1.45}
 <div class="actions" style="margin:10px 0"><button id="load">Load for this session</button><button class="secondary" id="clear">Clear</button></div>
 <p>2. Open a Greenhouse, Lever, or Ashby application. Click Fill; review every field and upload files yourself.</p>
 <div class="actions"><button id="fill">Fill current application</button></div>
+<section style="margin-top:15px;border-top:1px solid #455569;padding-top:10px">
+  <p><strong>Optional file attachments</strong></p>
+  <p>Select the tailored files yourself. They are only read when you click Attach, are not stored in the profile, and are not submitted.</p>
+  <label style="display:block;margin:8px 0">Résumé (PDF/DOC/DOCX) <input id="resume-file" type="file" accept=".pdf,.doc,.docx,application/pdf"></label>
+  <button class="secondary" id="attach-resume">Attach résumé to this form</button>
+  <label style="display:block;margin:12px 0 8px">Cover letter (PDF/DOC/DOCX) <input id="cover-file" type="file" accept=".pdf,.doc,.docx,application/pdf"></label>
+  <button class="secondary" id="attach-cover">Attach cover letter to this form</button>
+</section>
 <div class="status" id="status" aria-live="polite"></div>
-<small>No submission, account creation, external API calls, or persistent storage. Auto-fill won't attach PDFs or answer sensitive questions.</small>
+<small>No submission, account creation, external API calls, or persistent storage. Files are attached only when you explicitly select them and click Attach. Sensitive questions remain manual.</small>
 <script src="jobos-apply.js"></script><script src="popup.js"></script>
 </body></html>
