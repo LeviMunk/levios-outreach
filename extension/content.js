@@ -57,7 +57,7 @@
      const label=labelFor(el);
      if(deny.test(label)||JobOSApply.isSensitiveQuestion(label)){skipped++;continue;}
      const key=fieldFor(el,label);
-     const value=(key&&parsed.profile[key])||JobOSApply.matchingAnswer(parsed.answers,label);
+     const value=(key&&parsed.profile[key])||label.split(' | ').map(part=>JobOSApply.matchingAnswer(parsed.answers,part)).find(Boolean);
      if(!value){skipped++;continue;}
      if(updateValue(el,value))filled++;else skipped++;
    }
