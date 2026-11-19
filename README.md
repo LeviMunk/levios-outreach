@@ -1,3 +1,13 @@
+## JobOS Apply 3.0: Smart Answer Vault (proposed release, November 19, 2026)
+
+- Under **More tools → Workspace management → JobOS Apply**, a Smart Answer Vault composer accepts a pasted employer question and proposes editable wording. It runs in the browser without an extension or an external AI request.
+- Exact approved answers are reused first, then related approved answers by topic, then concise drafts from verified employment descriptions. If none exists, the composer leaves the response blank. This is limited topic matching, not a model that can discover or validate new personal facts.
+- **Copy answer** is an explicit clipboard action. **Approve & save to Vault** requires user confirmation; approved responses are stored in the existing encrypted vault as screening answers. Only approved responses are available to Chrome export.
+- Extension changes permit related approved wording only in empty open-ended textareas on supported ATS hosts. The extension never overwrites existing text, submits an application, or fills sensitive/legal fields.
+- On work-managed computers, use the no-extension copy/paste workflow where permitted by employer policy; do not bypass browser administration.
+- Source changes are not proof of live deployment. Run Node tests and browser integration tests and verify the hosted site's caching before declaring this live.
+
+---
 ## Private résumé-to-JobOS Apply suggestion import (Nov 19, 2026)
 
 - The encrypted JobOS vault cannot be written from Google Drive or GitHub. Users should import a private `jobos-resume-suggestions-v1` JSON file through **More tools → Workspace management → JobOS Apply → Import résumé suggestions**.
