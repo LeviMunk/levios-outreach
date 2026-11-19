@@ -1,0 +1,36 @@
+name: JobOS Apply browser tests
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app.js'
+      - 'jobos-apply.js'
+      - 'extension/**'
+      - 'scripts/test-jobos-apply-browser.mjs'
+      - 'tests/apply-core.test.mjs'
+      - '.github/workflows/jobos-apply.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  autofill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify schemas and JavaScript syntax
+        run: |
+          node --test tests/apply-core.test.mjs
+          node --check app.js
+          node --check extension/popup.js
+          node --check extension/content.js
+          node --check jobos-apply.js
+      - name: Install browser test runner
+        run: npm install --no-save playwright@1.58.2
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Test three supported ATS form fixtures
+        run: node scripts/test-jobos-apply-browser.mjs
