@@ -1,3 +1,12 @@
+## Private résumé-to-JobOS Apply suggestion import (Nov 19, 2026)
+
+- The encrypted JobOS vault cannot be written from Google Drive or GitHub. Users should import a private `jobos-resume-suggestions-v1` JSON file through **More tools → Workspace management → JobOS Apply → Import résumé suggestions**.
+- A suggestion file contains optional `profile`, `experience`, and `education`. All imported history entries have `verifiedAt` cleared, even if the file claims otherwise. Only empty master-profile fields are populated. Existing verified history records are not overwritten.
+- Suggested entries are excluded from Chrome autofill exports until the applicant uses **Review & edit**, checks dates, confirms the entry, and saves it.
+- A profile with newly imported fields requires fresh user verification before the **Copy verified autofill data** button becomes available.
+- Do not place applicants' private import files, résumés, or contact details in a public repository or website asset path. The import files should be shared only with the user.
+
+---
 ## JobOS Apply Phase 2 (Nov 19, 2026)
 
 - Under **More tools → Workspace management → JobOS Apply**, add individually reviewed employment and education entries. Confirm each entry before saving. Dates should be YYYY or YYYY-MM; Present is allowed for a current job.
